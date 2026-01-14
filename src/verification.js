@@ -27,7 +27,7 @@ const VERIFICATION_TESTS = {
         { date: [1955, 10, 28], expected: { stem: 8, branch: 10 }, name: 'Bill Gates (壬戌)' },
         { date: [1954, 4, 7], expected: { stem: 9, branch: 5 }, name: 'Jackie Chan (癸巳)' },
         { date: [2000, 1, 1], expected: { stem: 4, branch: 6 }, name: 'Y2K (戊午)' },
-        { date: [2026, 1, 14], expected: { stem: 4, branch: 0 }, name: 'Current Test (戊子)' }
+        { date: [2026, 1, 14], expected: { stem: 4, branch: 0 }, name: 'Jan 14 2026 (戊子)' }
     ],
     
     // Kua Number Tests - Pre-2000 and Post-2000
