@@ -7,12 +7,13 @@ import { computeStartAge } from "./luck-pillars/startAge";
 import { sequenceLuckPillars } from "./luck-pillars/sequence";
 import { computeDayHourFlow } from "./flows/dayHourFlow";
 import { FlowContext } from "./flows/types";
+import { SolarTermAdapter } from "./calendar/adapters";
 
 export type BaZiInput = {
   pillars: FourPillars;
   gender: Gender;
-  daysToNearestSolarTerm: number;
   normalizedISO: string;
+  solar: SolarTermAdapter;
 };
 
 export type BaZiChart = {
@@ -38,11 +39,16 @@ export type BaZiChart = {
 };
 
 export function computeBaZiChart(input: BaZiInput): BaZiChart {
-  const { pillars, gender, daysToNearestSolarTerm, normalizedISO } = input;
+  const { pillars, gender, normalizedISO, solar } = input;
+
+  if (!solar) {
+    throw new Error("SOLAR_TERM_ADAPTER_REQUIRED");
+  }
 
   const dm = computeDayMaster(pillars.day.stem);
   const direction = computeLuckDirection(dm.polarity, gender);
-  const startAge = computeStartAge(daysToNearestSolarTerm, direction);
+  const days = solar.daysToNearestSolarTerm(normalizedISO, direction);
+  const startAge = computeStartAge(days, direction);
   const sequence = sequenceLuckPillars(pillars.month, direction);
 
   const dayHourFlow = computeDayHourFlow(normalizedISO, pillars.day.stem);
@@ -63,8 +69,8 @@ export function computeBaZiChart(input: BaZiInput): BaZiChart {
       sequence,
     },
     flows: {
-      year: { stem: "?" as any, branch: "?" as any },   // placeholder adapter
-      month: { stem: "?" as any, branch: "?" as any },  // placeholder adapter
+      year: solar.computeYearFlow(normalizedISO),
+      month: solar.computeMonthFlow(normalizedISO),
       day: dayHourFlow.day,
       hour: dayHourFlow.hour,
     },
