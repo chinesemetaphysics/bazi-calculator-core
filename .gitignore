@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.log
+.mcp.json
+package-lock.json
+tools/
