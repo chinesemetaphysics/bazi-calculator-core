@@ -1,12 +1,9 @@
 import { FourPillars } from "../shared/types";
+import { computeDayMaster } from "./day-master/dayMaster";
+import { computeTenGod } from "./ten-gods";
 
 export type BaZiInput = {
-  normalizedTimeISO: string; // from Time Doctrine
-  location: {
-    lat: number;
-    lon: number;
-  };
-  gender: "male" | "female";
+  pillars: FourPillars;
 };
 
 export type BaZiChart = {
@@ -16,8 +13,26 @@ export type BaZiChart = {
     element: string;
     polarity: "yin" | "yang";
   };
+  tenGods: {
+    year: string;
+    month: string;
+    day: string;
+    hour: string;
+  };
 };
 
-export function computeBaZiChart(_: BaZiInput): BaZiChart {
-  throw new Error("NOT_IMPLEMENTED_SSOT_STAGE_10");
+export function computeBaZiChart(input: BaZiInput): BaZiChart {
+  const { pillars } = input;
+  const dm = computeDayMaster(pillars.day.stem);
+
+  return {
+    pillars,
+    dayMaster: dm,
+    tenGods: {
+      year: computeTenGod(pillars.day.stem, pillars.year.stem),
+      month: computeTenGod(pillars.day.stem, pillars.month.stem),
+      day: "Friend",
+      hour: computeTenGod(pillars.day.stem, pillars.hour.stem),
+    },
+  };
 }
