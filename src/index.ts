@@ -1,4 +1,6 @@
-export * from "./engine";
+// PUBLIC API — LOCKED
 
-// Explicit public adapters
+export { computeBaZiChart } from "./engine/bazi";
+
+// Calendar adapters (explicitly allowed)
 export { SolarTermAdapterV1 } from "./engine/bazi/calendar/solar-term-adapter";

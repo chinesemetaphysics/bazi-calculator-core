@@ -3,6 +3,16 @@
  * Calculates Solar Terms algorithmically using VSOP87 simplified formulas
  * Valid for years 1900-2100+ with high accuracy
  * 
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  SSOT (Single Source of Truth) for Solar Term Calculations      ║
+ * ║  Version: 2.0.0                                                  ║
+ * ║  All websites MUST use this file via core package               ║
+ * ╠══════════════════════════════════════════════════════════════════╣
+ * ║  v2.0.0: Fixed year boundary bug in findSolarLongitudeJD        ║
+ * ║          Fixed date sorting bug in getSolarMonthForDate         ║
+ * ║  v1.0.0: Initial VSOP87-based astronomical calculation          ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ * 
  * This replaces the hardcoded SOLAR_TERMS lookup table with computed values.
  */
 
@@ -184,57 +194,94 @@ function calculateSolarLongitude(JD) {
 
 /**
  * Find the exact Julian Day when the Sun reaches a specific longitude
- * Uses Newton-Raphson iteration for precision
- * @param {number} year - Year to search within
- * @param {number} targetLongitude - Target solar longitude (0-360)
+ * Uses Newton-Raphson iteration with proper year targeting
+ * 
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  FIXED v2.0.0: Properly calculates initial estimate based on    ║
+ * ║  the approximate month when each longitude occurs               ║
+ * ║  Previous bug: Autumn/winter longitudes would find prev year    ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ * 
+ * @param {number} year - Target Gregorian year
+ * @param {number} targetLongitude - Solar longitude in degrees (0-360)
  * @returns {number} Julian Day Number
  */
 function findSolarLongitudeJD(year, targetLongitude) {
+    const avgDailyMotion = 360 / 365.25; // ~0.9856 degrees per day
+
     // ╔════════════════════════════════════════════════════════════════════╗
-    // ║  FIXED: Correct initial estimate based on solar term dates         ║
-    // ║  Spring Equinox (longitude 0°) occurs around March 20 (day 79)    ║
-    // ║  Sun moves ~0.9856° per day (360° / 365.25 days)                  ║
+    // ║  FIX: Map each solar longitude to its approximate month           ║
+    // ║  This ensures we start searching in the correct part of the year  ║
     // ╚════════════════════════════════════════════════════════════════════╝
     
-    const avgDailyMotion = 360 / 365.25; // ~0.9856 degrees per day
-    
-    // Calculate days from Spring Equinox (March 20, day ~79)
-    // Spring Equinox is at longitude 0°
-    // We need to find when sun reaches targetLongitude
-    
-    let daysFromEquinox;
-    if (targetLongitude <= 180) {
-        // Longitude 0-180: Spring Equinox to Autumn Equinox (Mar-Sep)
-        daysFromEquinox = targetLongitude / avgDailyMotion;
-    } else {
-        // Longitude 180-360: Autumn Equinox to next Spring Equinox (Sep-Mar)
-        // 315° (Li Chun) is 45° before 360° (next Spring Equinox)
-        // So it's about 45/0.9856 = ~46 days before March 20 = ~Feb 4
-        daysFromEquinox = (targetLongitude - 360) / avgDailyMotion;
+    // Approximate month for each Jie term longitude:
+    // 315° = Feb (Li Chun), 345° = Mar, 15° = Apr, 45° = May, 75° = Jun,
+    // 105° = Jul, 135° = Aug, 165° = Sep, 195° = Oct, 225° = Nov, 255° = Dec, 285° = Jan
+    const longitudeToMonth = {
+        315: 2,   // Li Chun ~ Feb 4
+        345: 3,   // Jing Zhe ~ Mar 6
+        15: 4,    // Qing Ming ~ Apr 5
+        45: 5,    // Li Xia ~ May 6
+        75: 6,    // Mang Zhong ~ Jun 6
+        105: 7,   // Xiao Shu ~ Jul 7
+        135: 8,   // Li Qiu ~ Aug 8
+        165: 9,   // Bai Lu ~ Sep 8
+        195: 10,  // Han Lu ~ Oct 8
+        225: 11,  // Li Dong ~ Nov 7
+        255: 12,  // Da Xue ~ Dec 7
+        285: 1    // Xiao Han ~ Jan 6
+    };
+
+    // Get approximate month for this longitude (or estimate from longitude)
+    let approxMonth = longitudeToMonth[targetLongitude];
+    if (approxMonth === undefined) {
+        // For non-standard longitudes, estimate from the value
+        // Longitude 0° ~ Mar 20, increases ~30° per month
+        if (targetLongitude <= 180) {
+            approxMonth = Math.floor(3 + targetLongitude / 30) % 12 || 12;
+        } else {
+            approxMonth = Math.floor(3 + (targetLongitude - 360) / 30 + 12) % 12 || 12;
+        }
     }
     
-    // Spring Equinox is around March 20 = day 79 of year
-    const dayOfYear = 79 + daysFromEquinox;
-    
-    // Convert to Julian Day
-    let JD = gregorianToJulianDay(year, 1, 1) + dayOfYear - 1;
-    
+    // Start from the middle of the approximate month
+    let JD = gregorianToJulianDay(year, approxMonth, 15);
+
     // Newton-Raphson iteration for precision
     for (let i = 0; i < 50; i++) {
         const currentLong = calculateSolarLongitude(JD);
         let diff = targetLongitude - currentLong;
-        
+
         // Handle wrap-around at 0/360 boundary
         if (diff > 180) diff -= 360;
         if (diff < -180) diff += 360;
-        
+
         // Check convergence (< 0.00001° is ~1 second accuracy)
         if (Math.abs(diff) < 0.00001) break;
-        
+
         // Adjust JD based on how far off we are
         JD += diff / avgDailyMotion;
     }
+
+    // Verify result is in the expected year (within reasonable bounds)
+    const result = julianDayToGregorian(JD);
     
+    // If we somehow got the wrong year, adjust and re-search
+    if (result.year !== year) {
+        const yearDiff = year - result.year;
+        JD += yearDiff * 365.25;
+        
+        // Re-iterate to refine
+        for (let i = 0; i < 20; i++) {
+            const currentLong = calculateSolarLongitude(JD);
+            let diff = targetLongitude - currentLong;
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            if (Math.abs(diff) < 0.00001) break;
+            JD += diff / avgDailyMotion;
+        }
+    }
+
     return JD;
 }
 
@@ -304,26 +351,42 @@ function getLiChunDate(year) {
 
 /**
  * Find which solar month a given date falls into
+ * 
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  FIXED v2.0.0: Sort terms by actual date (JD), not by index     ║
+ * ║  Previous bug: Ox (Jan) at end of array but occurs before Sep   ║
+ * ╚══════════════════════════════════════════════════════════════════╝
+ * 
  * @param {number} year - Gregorian year
  * @param {number} month - Gregorian month (1-12)
  * @param {number} day - Day of month
- * @returns {Object} { solarMonthIndex, monthBranch, previousTerm, nextTerm }
+ * @returns {Object} { solarMonthIndex, monthBranch, currentTerm, termDate }
  */
 function getSolarMonthForDate(year, month, day) {
     // Get terms for current year and previous year
     const currentYearTerms = getYearSolarTerms(year);
     const prevYearTerms = getYearSolarTerms(year - 1);
     
-    // Create a timeline of all relevant terms
+    // Combine all terms (terms already contain their correct year from calculation)
     const allTerms = [
-        ...prevYearTerms.slice(-2).map(t => ({ ...t, year: year - 1 })), // Last 2 terms of prev year
-        ...currentYearTerms.map(t => ({ ...t, year }))
+        ...prevYearTerms,
+        ...currentYearTerms
     ];
+    
+    // ╔════════════════════════════════════════════════════════════════════╗
+    // ║  FIX: Sort terms by Julian Day (actual chronological order)       ║
+    // ║  This ensures Jan (Ox) comes before Sep (Rooster) in the search   ║
+    // ╚════════════════════════════════════════════════════════════════════╝
+    allTerms.sort((a, b) => {
+        const jdA = gregorianToJulianDay(a.year, a.month, a.day);
+        const jdB = gregorianToJulianDay(b.year, b.month, b.day);
+        return jdA - jdB;
+    });
     
     // Convert target date to comparable value
     const targetJD = gregorianToJulianDay(year, month, day);
     
-    // Find which term period the date falls into
+    // Find which term period the date falls into (search backwards through sorted list)
     for (let i = allTerms.length - 1; i >= 0; i--) {
         const term = allTerms[i];
         const termJD = gregorianToJulianDay(term.year, term.month, term.day);
