@@ -1,0 +1,25 @@
+{
+  "name": "bazi-calculator-core",
+  "version": "2.0.0",
+  "description": "Core BaZi (Four Pillars) calculation engine - SSOT for TheArties applications",
+  "main": "dist/bazi-calculator.js",
+  "module": "dist/bazi-calculator.esm.js",
+  "browser": "dist/bazi-calculator.umd.js",
+  "unpkg": "dist/bazi-calculator.umd.js",
+  "jsdelivr": "dist/bazi-calculator.umd.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "test": "node test/run-tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chinesemetaphysics/bazi-calculator-core"
+  },
+  "keywords": ["bazi", "four-pillars", "chinese-metaphysics", "feng-shui"],
+  "author": "TheArties",
+  "license": "MIT"
+}

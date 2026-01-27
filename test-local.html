@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BaZi Calculator Core - Local Test</title>
+</head>
+<body>
+    <h1>BaZi Calculator Core - Local Test</h1>
+    <div id="output"></div>
+
+    <script src="dist/bazi-calculator.js"></script>
+    <script>
+        const output = document.getElementById('output');
+        
+        try {
+            // Test calculation
+            const chart = BaZiCalculator.calculateBaZi({
+                year: 2000,
+                month: 1,
+                day: 1,
+                hour: 12,
+                minute: 0,
+                timezone: '+08:00'
+            });
+            
+            output.innerHTML = '<h2>✅ SUCCESS!</h2><pre>' + JSON.stringify(chart, null, 2) + '</pre>';
+            console.log('BaZi Chart:', chart);
+        } catch (error) {
+            output.innerHTML = '<h2>❌ ERROR!</h2><pre>' + error.message + '</pre>';
+            console.error('Error:', error);
+        }
+    </script>
+</body>
+</html>
