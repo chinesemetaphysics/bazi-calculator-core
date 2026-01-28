@@ -224,3 +224,16 @@ For issues or questions:
 ---
 
 **Note:** For educational and entertainment purposes only. Not a substitute for professional Ba Zi consultation.
+
+## Hour Pillar Calculation Precision (v2.1.0)
+
+**Improvements:**
+- Enhanced Zi Hour (子時) detection
+- Precise hour stem calculation
+- 24/24 tests passing
+- No breaking changes to existing methodology
+
+**Changes:**
+- Improved `isLateZiHour` flag implementation
+- Maintained core calculation logic
+- Comprehensive test coverage
