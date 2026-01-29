@@ -1,9 +1,9 @@
 /**
- * BaZi Calculator Core v3.0.0
+ * BaZi Calculator Core v3.0.1
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Complete SSOT for Chinese Metaphysics calculations
- * Includes: Four Pillars, Kua Number, Flying Stars, Afflictions, Direction Analysis
+ * Includes: Four Pillars, Kua Number, Flying Stars (Annual, Daily, Hourly), Afflictions, Direction Analysis
  */
 
 // ==============================================
@@ -288,6 +288,31 @@ function calculateDailyFlyingStars(year, month, day) {
     else if (yuanPosition < 40) centerStar = ((4 - cycleInYuan) % 9 + 9) % 9 || 9;
     else centerStar = ((7 - cycleInYuan) % 9 + 9) % 9 || 9;
     return { chart: generateFlyingStarChart(centerStar), centerStar, jiaziIndex, isYangDay, yuan: yuanPosition < 20 ? 'Upper' : yuanPosition < 40 ? 'Middle' : 'Lower' };
+}
+
+function calculateHourlyFlyingStars(year, month, day, hour, minute) {
+    const dailyData = calculateDailyFlyingStars(year, month, day);
+    const dailyCenter = dailyData.centerStar;
+    const isYangDay = dailyData.isYangDay;
+    const totalMinutes = hour * 60 + minute;
+    let hourBranchIndex;
+    if (totalMinutes >= 23 * 60 || totalMinutes < 1 * 60) hourBranchIndex = 0;
+    else if (totalMinutes < 3 * 60) hourBranchIndex = 1;
+    else if (totalMinutes < 5 * 60) hourBranchIndex = 2;
+    else if (totalMinutes < 7 * 60) hourBranchIndex = 3;
+    else if (totalMinutes < 9 * 60) hourBranchIndex = 4;
+    else if (totalMinutes < 11 * 60) hourBranchIndex = 5;
+    else if (totalMinutes < 13 * 60) hourBranchIndex = 6;
+    else if (totalMinutes < 15 * 60) hourBranchIndex = 7;
+    else if (totalMinutes < 17 * 60) hourBranchIndex = 8;
+    else if (totalMinutes < 19 * 60) hourBranchIndex = 9;
+    else if (totalMinutes < 21 * 60) hourBranchIndex = 10;
+    else hourBranchIndex = 11;
+    let hourlyCenterStar = isYangDay ? dailyCenter + hourBranchIndex : dailyCenter - hourBranchIndex;
+    hourlyCenterStar = ((hourlyCenterStar - 1) % 9 + 9) % 9 + 1;
+    const HOUR_NAMES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    const TIME_RANGES = ['23:00-01:00', '01:00-03:00', '03:00-05:00', '05:00-07:00', '07:00-09:00', '09:00-11:00', '11:00-13:00', '13:00-15:00', '15:00-17:00', '17:00-19:00', '19:00-21:00', '21:00-23:00'];
+    return { chart: generateFlyingStarChart(hourlyCenterStar), centerStar: hourlyCenterStar, hourBranchIndex, hourName: HOUR_NAMES[hourBranchIndex], timeRange: TIME_RANGES[hourBranchIndex], isYangDay };
 }
 
 // ==============================================
