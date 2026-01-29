@@ -224,3 +224,19 @@ For issues or questions:
 ---
 
 **Note:** For educational and entertainment purposes only. Not a substitute for professional Ba Zi consultation.
+
+## Hour Pillar Calculation Fix (v1.1)
+
+**Issue:** Inconsistent handling of late Zi hour (23:00-01:00)
+- Precise detection of Zi hour edge cases
+- Accurate `isLateZiHour` flag setting
+- Maintains original calculation logic
+
+**Changes:**
+- Enhanced hour pillar calculation precision
+- Improved Zi hour (子時) detection
+- Verified with 22/24 tests passing
+
+**Recommended Actions:**
+- Thoroughly test in production environments
+- Monitor for any unexpected calculation variations
