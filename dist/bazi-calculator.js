@@ -1,9 +1,10 @@
 /**
- * BaZi Calculator Core v3.0.1
+ * BaZi Calculator Core v3.0.2
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Complete SSOT for Chinese Metaphysics calculations
  * Includes: Four Pillars, Kua Number, Flying Stars (Annual, Daily, Hourly), Afflictions, Direction Analysis
+ * All functions exposed to window for browser use
  */
 
 // ==============================================
@@ -409,5 +410,50 @@ function runValidation() {
     return tests;
 }
 
-// Run validation on load
-if (typeof window !== 'undefined') setTimeout(runValidation, 100);
+// ==============================================
+// EXPOSE TO GLOBAL SCOPE (for browser use)
+// ==============================================
+if (typeof window !== 'undefined') {
+    // Constants
+    window.HEAVENLY_STEMS = HEAVENLY_STEMS;
+    window.EARTHLY_BRANCHES = EARTHLY_BRANCHES;
+    window.FIVE_ELEMENTS = FIVE_ELEMENTS;
+    window.FLYING_STARS = FLYING_STARS;
+    window.EIGHT_MANSIONS = EIGHT_MANSIONS;
+    window.DIRECTION_ELEMENTS = DIRECTION_ELEMENTS;
+    window.DIRECTION_NAMES = DIRECTION_NAMES;
+
+    // Pillar calculations
+    window.calculateDayPillar = calculateDayPillar;
+    window.calculateYearPillar = calculateYearPillar;
+    window.calculateMonthPillar = calculateMonthPillar;
+    window.calculateHourPillar = calculateHourPillar;
+    window.calculateKuaNumber = calculateKuaNumber;
+    window.calculateBaZiChart = calculateBaZiChart;
+
+    // Solar terms
+    window.getLiChunDate = getLiChunDate;
+    window.getSolarMonthForDate = getSolarMonthForDate;
+    window.getYearSolarTerms = getYearSolarTerms;
+
+    // Flying stars
+    window.calculateAnnualFlyingStars = calculateAnnualFlyingStars;
+    window.calculateDailyFlyingStars = calculateDailyFlyingStars;
+    window.calculateHourlyFlyingStars = calculateHourlyFlyingStars;
+    window.generateFlyingStarChart = generateFlyingStarChart;
+    window.getAnnualCenterStar = getAnnualCenterStar;
+
+    // Afflictions
+    window.getAnnualAfflictions = getAnnualAfflictions;
+    window.getSanShaFrame = getSanShaFrame;
+
+    // Direction analysis
+    window.analyzeAllDirections = analyzeAllDirections;
+    window.calculateDirectionScore = calculateDirectionScore;
+
+    // Validation
+    window.runValidation = runValidation;
+
+    // Run validation on load
+    setTimeout(runValidation, 100);
+}
