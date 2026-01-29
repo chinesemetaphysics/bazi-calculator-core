@@ -1,5 +1,5 @@
 /**
- * BaZi Calculator Core v3.0.4
+ * BaZi Calculator Core v3.0.5
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Complete SSOT for Chinese Metaphysics calculations
@@ -348,10 +348,10 @@ function getAnnualAfflictions(year, month, day) {
     let wuHuangDir = 'Center';
     for (let dir in annualStars) { if (annualStars[dir] === 5) { wuHuangDir = dir; break; } }
     return {
-        taiSui: { direction: taiSuiDir, name: 'Tai Sui', chinese: '太歲', description: 'Grand Duke Jupiter' },
-        suiPo: { direction: OPPOSITE[taiSuiDir], name: 'Sui Po', chinese: '歲破', description: 'Year Breaker' },
-        wuHuang: { direction: wuHuangDir, name: 'Wu Huang', chinese: '五黃', description: 'Five Yellow' },
-        sanSha: { direction: SAN_SHA_MAP[branchIndex], name: 'San Sha', chinese: '三煞', description: 'Three Killings', frame: getSanShaFrame(SAN_SHA_MAP[branchIndex]) },
+        taiSui: { direction: taiSuiDir, icon: '⚠️', name: 'Tai Sui', chinese: '太歲', description: 'Grand Duke Jupiter' },
+        suiPo: { direction: OPPOSITE[taiSuiDir], icon: '🔄', name: 'Sui Po', chinese: '歲破', description: 'Year Breaker' },
+        wuHuang: { direction: wuHuangDir, icon: '🚫', name: 'Wu Huang', chinese: '五黃', description: 'Five Yellow' },
+        sanSha: { direction: SAN_SHA_MAP[branchIndex], icon: '⛔', name: 'San Sha', chinese: '三煞', description: 'Three Killings', frame: getSanShaFrame(SAN_SHA_MAP[branchIndex]) },
         yearAnimal: EARTHLY_BRANCHES[branchIndex].animal, yearBranch: branchIndex
     };
 }
