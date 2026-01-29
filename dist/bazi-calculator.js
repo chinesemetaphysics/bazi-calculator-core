@@ -1,9 +1,9 @@
 /**
- * BaZi Calculator Core v3.0.3
+ * BaZi Calculator Core v3.0.4
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Complete SSOT for Chinese Metaphysics calculations
- * Includes: Four Pillars, Kua Number, Flying Stars (Annual, Daily, Hourly, getAllHourlyStars), Afflictions, Direction Analysis
+ * Includes: Four Pillars, Kua Number, Flying Stars, Afflictions, Direction Analysis
  */
 
 // ==============================================
@@ -311,8 +311,9 @@ function calculateHourlyFlyingStars(year, month, day, hour, minute) {
     let hourlyCenterStar = isYangDay ? dailyCenter + hourBranchIndex : dailyCenter - hourBranchIndex;
     hourlyCenterStar = ((hourlyCenterStar - 1) % 9 + 9) % 9 + 1;
     const HOUR_NAMES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    const HOUR_PINYIN = ['Zǐ', 'Chǒu', 'Yín', 'Mǎo', 'Chén', 'Sì', 'Wǔ', 'Wèi', 'Shēn', 'Yǒu', 'Xū', 'Hài'];
     const TIME_RANGES = ['23:00-01:00', '01:00-03:00', '03:00-05:00', '05:00-07:00', '07:00-09:00', '09:00-11:00', '11:00-13:00', '13:00-15:00', '15:00-17:00', '17:00-19:00', '19:00-21:00', '21:00-23:00'];
-    return { chart: generateFlyingStarChart(hourlyCenterStar), centerStar: hourlyCenterStar, hourBranchIndex, hourName: HOUR_NAMES[hourBranchIndex], timeRange: TIME_RANGES[hourBranchIndex], isYangDay };
+    return { chart: generateFlyingStarChart(hourlyCenterStar), centerStar: hourlyCenterStar, hourBranchIndex, hourName: HOUR_NAMES[hourBranchIndex], hourPinyin: HOUR_PINYIN[hourBranchIndex], timeRange: TIME_RANGES[hourBranchIndex], isYangDay, flightDirection: isYangDay ? 'Forward (順飛)' : 'Reverse (逆飛)' };
 }
 
 function getAllHourlyStars(year, month, day) {
