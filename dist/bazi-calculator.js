@@ -1,10 +1,9 @@
 /**
- * BaZi Calculator Core v3.0.2
+ * BaZi Calculator Core v3.0.3
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Complete SSOT for Chinese Metaphysics calculations
- * Includes: Four Pillars, Kua Number, Flying Stars (Annual, Daily, Hourly), Afflictions, Direction Analysis
- * All functions exposed to window for browser use
+ * Includes: Four Pillars, Kua Number, Flying Stars (Annual, Daily, Hourly, getAllHourlyStars), Afflictions, Direction Analysis
  */
 
 // ==============================================
@@ -316,6 +315,16 @@ function calculateHourlyFlyingStars(year, month, day, hour, minute) {
     return { chart: generateFlyingStarChart(hourlyCenterStar), centerStar: hourlyCenterStar, hourBranchIndex, hourName: HOUR_NAMES[hourBranchIndex], timeRange: TIME_RANGES[hourBranchIndex], isYangDay };
 }
 
+function getAllHourlyStars(year, month, day) {
+    const hours = [];
+    const testHours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+    for (let i = 0; i < 12; i++) {
+        const hourData = calculateHourlyFlyingStars(year, month, day, testHours[i], 0);
+        hours.push({ ...hourData, index: i });
+    }
+    return hours;
+}
+
 // ==============================================
 // AFFLICTIONS
 // ==============================================
@@ -440,6 +449,7 @@ if (typeof window !== 'undefined') {
     window.calculateAnnualFlyingStars = calculateAnnualFlyingStars;
     window.calculateDailyFlyingStars = calculateDailyFlyingStars;
     window.calculateHourlyFlyingStars = calculateHourlyFlyingStars;
+    window.getAllHourlyStars = getAllHourlyStars;
     window.generateFlyingStarChart = generateFlyingStarChart;
     window.getAnnualCenterStar = getAnnualCenterStar;
 
