@@ -9,11 +9,15 @@ const path = require('path');
 // Read all source files
 const constants = fs.readFileSync(path.join(__dirname, 'src/constants.js'), 'utf8');
 const solarTerms = fs.readFileSync(path.join(__dirname, 'src/solarTerms.js'), 'utf8');
+const tenGods = fs.readFileSync(path.join(__dirname, 'src/tenGods.js'), 'utf8');
+const branchRelations = fs.readFileSync(path.join(__dirname, 'src/branchRelations.js'), 'utf8');
+const nayin = fs.readFileSync(path.join(__dirname, 'src/nayin.js'), 'utf8');
 const dayPillar = fs.readFileSync(path.join(__dirname, 'src/dayPillar.js'), 'utf8');
 const yearPillar = fs.readFileSync(path.join(__dirname, 'src/yearPillar.js'), 'utf8');
 const monthPillar = fs.readFileSync(path.join(__dirname, 'src/monthPillar.js'), 'utf8');
 const hourPillar = fs.readFileSync(path.join(__dirname, 'src/hourPillar.js'), 'utf8');
 const formatters = fs.readFileSync(path.join(__dirname, 'src/formatters.js'), 'utf8');
+const chartAnalysis = fs.readFileSync(path.join(__dirname, 'src/chartAnalysis.js'), 'utf8');
 const index = fs.readFileSync(path.join(__dirname, 'src/index.js'), 'utf8');
 
 // Strip module.exports and require statements
@@ -26,7 +30,7 @@ function stripCommonJS(code) {
 
 // Build UMD wrapper
 const umdBundle = `/**
- * BaZi Calculator Core v2.0.0
+ * BaZi Calculator Core v3.1.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  * 
  * Core calculation engine for Four Pillars (BaZi) analysis
@@ -50,6 +54,21 @@ const umdBundle = `/**
     // CONSTANTS
     // ============================================
     ${stripCommonJS(constants)}
+
+    // ============================================
+    // TEN GODS & ELEMENT CYCLES
+    // ============================================
+    ${stripCommonJS(tenGods)}
+
+    // ============================================
+    // BRANCH RELATIONS
+    // ============================================
+    ${stripCommonJS(branchRelations)}
+
+    // ============================================
+    // NA YIN
+    // ============================================
+    ${stripCommonJS(nayin)}
 
     // ============================================
     // SOLAR TERMS
@@ -82,6 +101,11 @@ const umdBundle = `/**
     ${stripCommonJS(formatters)}
 
     // ============================================
+    // CHART ANALYSIS
+    // ============================================
+    ${stripCommonJS(chartAnalysis)}
+
+    // ============================================
     // MAIN CALCULATOR
     // ============================================
     ${stripCommonJS(index)}
@@ -90,29 +114,53 @@ const umdBundle = `/**
     // PUBLIC API
     // ============================================
     return {
-        // Main calculation function
+        // Main calculation functions
         calculateBaZi: calculateBaZi,
-        
+        calculateFullChart: calculateFullChart,
+
         // Individual pillar functions
         calculateYearPillar: calculateYearPillar,
         calculateMonthPillar: calculateMonthPillar,
         calculateDayPillar: calculateDayPillar,
         calculateHourPillar: calculateHourPillar,
-        
+
         // Solar terms
-        getSolarTerms: getSolarTerms,
-        findLiChun: findLiChun,
-        
+        getSolarTerms: getYearSolarTerms,
+        getYearSolarTerms: getYearSolarTerms,
+        findLiChun: findSolarLongitudeJD,
+        getLiChunDate: getLiChunDate,
+
         // Formatters
         formatPillar: formatPillar,
         formatChinesePillar: formatChinesePillar,
-        
-        // Constants
+
+        // Constants - Core
         HEAVENLY_STEMS: HEAVENLY_STEMS,
         EARTHLY_BRANCHES: EARTHLY_BRANCHES,
-        
+
+        // Constants - Ten Gods & Elements
+        TEN_GODS: TEN_GODS,
+        ELEMENT_CYCLES: ELEMENT_CYCLES,
+
+        // Constants - Branch Relations
+        SIX_HARMONIES: SIX_HARMONIES,
+        SIX_CLASHES: SIX_CLASHES,
+        SIX_HARMS: SIX_HARMS,
+
+        // Constants - Na Yin
+        NAYIN: NAYIN,
+
+        // Analysis Functions
+        getTenGod: getTenGod,
+        getElementRelation: getElementRelation,
+        getNaYin: getNaYin,
+        getElementCount: getElementCount,
+        getFavorableElements: getFavorableElements,
+        getLifeGua: getLifeGua,
+        getFavorableDirections: getFavorableDirections,
+
         // Version
-        version: '2.0.0'
+        version: '3.1.0'
     };
 });
 `;
@@ -133,7 +181,7 @@ console.log('   - dist/bazi-calculator.umd.js');
 console.log('   - dist/bazi-calculator.js');
 console.log('');
 console.log('Usage in browser:');
-console.log('  <script src="https://cdn.jsdelivr.net/gh/chinesemetaphysics/bazi-calculator-core@v2.0.0/dist/bazi-calculator.js"></script>');
+console.log('  <script src="https://cdn.jsdelivr.net/gh/chinesemetaphysics/bazi-calculator-core@v3.1.0/dist/bazi-calculator.js"></script>');
 console.log('  <script>');
-console.log('    const chart = BaZiCalculator.calculateBaZi({ year: 2000, month: 1, day: 1, hour: 12, minute: 0, timezone: "+08:00" });');
+console.log('    const chart = BaZiCalculator.calculateFullChart(2000, 1, 1, 12, 0, "male");');
 console.log('  </script>');
