@@ -1478,6 +1478,7 @@ function calculateFullChart(year, month, day, hour, minute, gender) {
 
 
 
+
 /**
  * Parse timezone offset string to minutes
  * @param {string} timezone - Timezone string like "+08:00" or "-05:00"

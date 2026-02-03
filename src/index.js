@@ -13,6 +13,7 @@ const { calculateLuckPillars } = require('./luckPillars');
 const { HIDDEN_STEMS, getHiddenStems, getHiddenStemsForChart } = require('./constants');
 const { selectUseGod, calculateDayMasterStrength, getSeasonalStrength, analyzeImbalances, SEASONAL_STRENGTH } = require('./useGod');
 const { getVoidStars, isVoidBranch, analyzeVoidStarsInChart } = require('./voidStars');
+const { getNoblepeople, getPeachBlossom, getSkyHorse, getIntelligenceStar, getLifePalace } = require('./symbolicStars');
 
 /**
  * Parse timezone offset string to minutes
@@ -123,5 +124,10 @@ module.exports = {
     SEASONAL_STRENGTH,
     getVoidStars,
     isVoidBranch,
-    analyzeVoidStarsInChart
+    analyzeVoidStarsInChart,
+    getNoblepeople,
+    getPeachBlossom,
+    getSkyHorse,
+    getIntelligenceStar,
+    getLifePalace
 };
