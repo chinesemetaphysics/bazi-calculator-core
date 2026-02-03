@@ -1,10 +1,11 @@
 /**
- * BaZi Calculator Core v3.4.0
+ * BaZi Calculator Core v3.5.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
- * NEW in v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
+ * NEW in v3.5.0: 12 Officers (建除十二神) & 28 Mansions (二十八宿) - Date selection systems
+ * v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
  * v3.3.0: Use God (用神) calculation - the most important BaZi analysis
  */
 (function (global, factory) {
@@ -2416,6 +2417,218 @@ function calculateDestinyDoor(year, month, day, hour, dayStemChinese) {
 }
 
     // ============================================
+    // TIMING SYSTEMS DATA
+    // ============================================
+    /**
+ * Timing Systems Data
+ * 12 Day Officers (建除十二神) and 28 Lunar Mansions (二十八宿)
+ * Traditional Chinese timing selection systems
+ */
+
+// 12 Day Officers (建除十二神)
+// Used for selecting auspicious days for various activities
+const TWELVE_OFFICERS = [
+  { chinese: '建', pinyin: 'Jian', english: 'Establish', quality: 'auspicious',
+    meaning: 'Day of establishing and initiating',
+    good: 'Starting projects, opening businesses, making plans, taking initiative',
+    avoid: 'Demolition, ending things, funerals' },
+  { chinese: '除', pinyin: 'Chu', english: 'Remove', quality: 'auspicious',
+    meaning: 'Day of removal and cleansing',
+    good: 'Cleaning, medical treatment, removing obstacles, pest control, haircuts',
+    avoid: 'Weddings, celebrations, starting long-term projects' },
+  { chinese: '滿', pinyin: 'Man', english: 'Full', quality: 'auspicious',
+    meaning: 'Day of fullness and abundance',
+    good: 'Celebrations, receiving, harvesting, completing projects',
+    avoid: 'Medical procedures, acupuncture' },
+  { chinese: '平', pinyin: 'Ping', english: 'Balance', quality: 'neutral',
+    meaning: 'Day of balance and equality',
+    good: 'Routine matters, negotiations, mediation, paving roads',
+    avoid: 'Major decisions, big purchases' },
+  { chinese: '定', pinyin: 'Ding', english: 'Stable', quality: 'auspicious',
+    meaning: 'Day of stability and settlement',
+    good: 'Signing contracts, commitments, buying property, engagement',
+    avoid: 'Travel, moving, litigation' },
+  { chinese: '執', pinyin: 'Zhi', english: 'Execute', quality: 'neutral',
+    meaning: 'Day of execution and holding',
+    good: 'Legal matters, collecting debts, building, buying animals',
+    avoid: 'Moving, travel, major changes' },
+  { chinese: '破', pinyin: 'Po', english: 'Destroy', quality: 'inauspicious',
+    meaning: 'Day of breaking and destruction',
+    good: 'Demolition, breaking bad habits, ending harmful relationships',
+    avoid: 'Weddings, contracts, starting anything new, celebrations' },
+  { chinese: '危', pinyin: 'Wei', english: 'Danger', quality: 'inauspicious',
+    meaning: 'Day of danger and risk',
+    good: 'Climbing, risky activities only if necessary',
+    avoid: 'Travel, water activities, major decisions, medical procedures' },
+  { chinese: '成', pinyin: 'Cheng', english: 'Success', quality: 'auspicious',
+    meaning: 'Day of accomplishment and success',
+    good: 'Completing projects, celebrations, weddings, opening businesses',
+    avoid: 'Litigation, demanding debts' },
+  { chinese: '收', pinyin: 'Shou', english: 'Receive', quality: 'auspicious',
+    meaning: 'Day of receiving and gathering',
+    good: 'Collecting debts, harvesting, storing, receiving payments',
+    avoid: 'Funerals, medical procedures' },
+  { chinese: '開', pinyin: 'Kai', english: 'Open', quality: 'auspicious',
+    meaning: 'Day of opening and beginning',
+    good: 'Grand openings, starting jobs, moving in, weddings, travel',
+    avoid: 'Funerals, burying' },
+  { chinese: '閉', pinyin: 'Bi', english: 'Close', quality: 'inauspicious',
+    meaning: 'Day of closing and ending',
+    good: 'Funerals, filling holes, building walls, closing deals',
+    avoid: 'Opening new ventures, starting projects, medical treatment' }
+];
+
+// 28 Lunar Mansions (二十八宿)
+// Traditional Chinese asterisms used for timing and fortune telling
+const TWENTY_EIGHT_MANSIONS = [
+  { chinese: '角', pinyin: 'Jiao', english: 'Horn', animal: 'Dragon', element: 'wood', quality: 'auspicious' },
+  { chinese: '亢', pinyin: 'Kang', english: 'Neck', animal: 'Dragon', element: 'metal', quality: 'inauspicious' },
+  { chinese: '氐', pinyin: 'Di', english: 'Root', animal: 'Badger', element: 'earth', quality: 'auspicious' },
+  { chinese: '房', pinyin: 'Fang', english: 'Room', animal: 'Rabbit', element: 'sun', quality: 'auspicious' },
+  { chinese: '心', pinyin: 'Xin', english: 'Heart', animal: 'Fox', element: 'moon', quality: 'inauspicious' },
+  { chinese: '尾', pinyin: 'Wei', english: 'Tail', animal: 'Tiger', element: 'fire', quality: 'auspicious' },
+  { chinese: '箕', pinyin: 'Ji', english: 'Basket', animal: 'Leopard', element: 'water', quality: 'auspicious' },
+  { chinese: '斗', pinyin: 'Dou', english: 'Dipper', animal: 'Unicorn', element: 'wood', quality: 'auspicious' },
+  { chinese: '牛', pinyin: 'Niu', english: 'Ox', animal: 'Ox', element: 'metal', quality: 'inauspicious' },
+  { chinese: '女', pinyin: 'Nu', english: 'Girl', animal: 'Bat', element: 'earth', quality: 'inauspicious' },
+  { chinese: '虛', pinyin: 'Xu', english: 'Emptiness', animal: 'Rat', element: 'sun', quality: 'inauspicious' },
+  { chinese: '危', pinyin: 'Wei', english: 'Rooftop', animal: 'Swallow', element: 'moon', quality: 'inauspicious' },
+  { chinese: '室', pinyin: 'Shi', english: 'House', animal: 'Pig', element: 'fire', quality: 'auspicious' },
+  { chinese: '壁', pinyin: 'Bi', english: 'Wall', animal: 'Porcupine', element: 'water', quality: 'auspicious' },
+  { chinese: '奎', pinyin: 'Kui', english: 'Legs', animal: 'Wolf', element: 'wood', quality: 'auspicious' },
+  { chinese: '婁', pinyin: 'Lou', english: 'Bond', animal: 'Dog', element: 'metal', quality: 'auspicious' },
+  { chinese: '胃', pinyin: 'Wei', english: 'Stomach', animal: 'Pheasant', element: 'earth', quality: 'auspicious' },
+  { chinese: '昴', pinyin: 'Mao', english: 'Hairy Head', animal: 'Rooster', element: 'sun', quality: 'inauspicious' },
+  { chinese: '畢', pinyin: 'Bi', english: 'Net', animal: 'Crow', element: 'moon', quality: 'auspicious' },
+  { chinese: '觜', pinyin: 'Zi', english: 'Turtle Beak', animal: 'Monkey', element: 'fire', quality: 'inauspicious' },
+  { chinese: '參', pinyin: 'Shen', english: 'Three Stars', animal: 'Ape', element: 'water', quality: 'auspicious' },
+  { chinese: '井', pinyin: 'Jing', english: 'Well', animal: 'Tapir', element: 'wood', quality: 'auspicious' },
+  { chinese: '鬼', pinyin: 'Gui', english: 'Ghost', animal: 'Sheep', element: 'metal', quality: 'inauspicious' },
+  { chinese: '柳', pinyin: 'Liu', english: 'Willow', animal: 'Deer', element: 'earth', quality: 'inauspicious' },
+  { chinese: '星', pinyin: 'Xing', english: 'Star', animal: 'Horse', element: 'sun', quality: 'inauspicious' },
+  { chinese: '張', pinyin: 'Zhang', english: 'Extended Net', animal: 'Stag', element: 'moon', quality: 'auspicious' },
+  { chinese: '翼', pinyin: 'Yi', english: 'Wings', animal: 'Snake', element: 'fire', quality: 'inauspicious' },
+  { chinese: '軫', pinyin: 'Zhen', english: 'Chariot', animal: 'Earthworm', element: 'water', quality: 'auspicious' }
+];
+
+    // ============================================
+    // TIMING SYSTEMS
+    // ============================================
+    /**
+ * Timing Systems Functions
+ * 12 Day Officers (建除十二神) and 28 Lunar Mansions (二十八宿)
+ *
+ * Traditional Chinese date selection systems for determining
+ * auspicious and inauspicious days for various activities.
+ */
+
+
+
+
+
+
+/**
+ * Get the Day Officer for a specific date
+ * The 12 Officers cycle based on the relationship between month and day branches
+ * @param {number} year - Gregorian year
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day
+ * @returns {Object} Officer object with chinese, pinyin, english, quality, meaning, good, avoid
+ */
+function getTodayOfficer(year, month, day) {
+  // Calculate based on lunar month and day relationship
+  // Simplified calculation - starts from 建 on 寅 month 寅 day
+  const dayPillar = calculateDayPillar(year, month, day);
+  const monthPillar = calculateMonthPillar(year, month, day, dayPillar.stemIndex);
+
+  const monthIdx = monthPillar.branchIndex;
+  const dayIdx = dayPillar.branchIndex;
+
+  // Officer index = (dayIdx - monthIdx + 12) % 12
+  const officerIdx = (dayIdx - monthIdx + 12) % 12;
+  return TWELVE_OFFICERS[officerIdx];
+}
+
+/**
+ * Get the Lunar Mansion for a specific date
+ * The 28 Mansions cycle every 28 days
+ * @param {number} year - Gregorian year
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day
+ * @returns {Object} Mansion object with chinese, pinyin, english, animal, element, quality
+ */
+function getTodayMansion(year, month, day) {
+  // Mansions cycle every 28 days
+  // Reference: Jan 1, 2000 was mansion index 0 (角)
+  const refDate = Date.UTC(2000, 0, 1);
+  const targetDate = Date.UTC(year, month - 1, day);
+  const daysDiff = Math.floor((targetDate - refDate) / (24 * 60 * 60 * 1000));
+  const mansionIdx = ((daysDiff % 28) + 28) % 28;
+  return TWENTY_EIGHT_MANSIONS[mansionIdx];
+}
+
+/**
+ * Get hour rating based on element relationships
+ * Rates how favorable an hour is based on its earthly branch element
+ * and the relationship to the day master element
+ * @param {Object} chart - BaZi chart object with dayMaster
+ * @param {number} hourIndex - Hour branch index (0-11)
+ * @returns {number} Rating from 1-5 (5 = excellent, 1 = poor)
+ */
+function getHourRating(chart, hourIndex) {
+  if (!chart || !chart.dayMaster) return 3;
+
+  const dmElement = chart.dayMaster.element;
+  const hourBranch = EARTHLY_BRANCHES[hourIndex];
+  if (!hourBranch) return 3;
+
+  const hourElement = hourBranch.element;
+
+  // Import element cycles from constants
+  
+
+  // Hour produces Day Master (resource/support) = 5
+  if (ELEMENT_CYCLES.produces[hourElement] === dmElement) return 5;
+
+  // Same element = 4
+  if (dmElement === hourElement) return 4;
+
+  // Day Master controls hour (output/expression) = 4
+  if (ELEMENT_CYCLES.controls[dmElement] === hourElement) return 4;
+
+  // Day Master produces hour (drain) = 3
+  if (ELEMENT_CYCLES.produces[dmElement] === hourElement) return 3;
+
+  // Hour controls Day Master (pressure/challenge) = 2
+  if (ELEMENT_CYCLES.controls[hourElement] === dmElement) return 2;
+
+  return 3;
+}
+
+/**
+ * Get favorable direction for an hour
+ * Recommends a direction to face based on the chart's favorable directions
+ * @param {Object} chart - BaZi chart object with favorableDirections
+ * @param {number} hourIndex - Hour branch index (0-11)
+ * @returns {string} Direction recommendation (e.g., "Face North")
+ */
+function getHourDirection(chart, hourIndex) {
+  if (!chart || !chart.favorableDirections) {
+    return 'Calculate chart first';
+  }
+
+  const dirs = chart.favorableDirections;
+  const recommendations = [
+    dirs.shengQi,
+    dirs.tianYi,
+    dirs.yanNian,
+    dirs.fuWei
+  ];
+
+  return `Face ${recommendations[hourIndex % 4]}`;
+}
+
+    // ============================================
     // MAIN CALCULATOR
     // ============================================
     /**
@@ -2423,6 +2636,7 @@ function calculateDestinyDoor(year, month, day, hour, dayStemChinese) {
  * Pure calculation engine for Four Pillars
  * SSOT for all BaZi calculations
  */
+
 
 
 
@@ -2623,7 +2837,15 @@ function calculateBaZi(birth) {
         calculateDestinyDoor: calculateDestinyDoor,
         EIGHT_DOORS: EIGHT_DOORS,
 
+        // Timing Systems (v3.5.0)
+        getTodayOfficer: getTodayOfficer,
+        getTodayMansion: getTodayMansion,
+        getHourRating: getHourRating,
+        getHourDirection: getHourDirection,
+        TWELVE_OFFICERS: TWELVE_OFFICERS,
+        TWENTY_EIGHT_MANSIONS: TWENTY_EIGHT_MANSIONS,
+
         // Version
-        version: '3.4.0'
+        version: '3.5.0'
     };
 });

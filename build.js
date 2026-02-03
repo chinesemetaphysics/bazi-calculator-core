@@ -25,6 +25,8 @@ const formatters = fs.readFileSync(path.join(__dirname, 'src/formatters.js'), 'u
 const chartAnalysis = fs.readFileSync(path.join(__dirname, 'src/chartAnalysis.js'), 'utf8');
 const qiMenData = fs.readFileSync(path.join(__dirname, 'src/data/qiMenData.js'), 'utf8');
 const qiMen = fs.readFileSync(path.join(__dirname, 'src/qiMen.js'), 'utf8');
+const timingData = fs.readFileSync(path.join(__dirname, 'src/data/timingData.js'), 'utf8');
+const timing = fs.readFileSync(path.join(__dirname, 'src/timing.js'), 'utf8');
 const index = fs.readFileSync(path.join(__dirname, 'src/index.js'), 'utf8');
 
 // Strip module.exports and require statements
@@ -37,12 +39,13 @@ function stripCommonJS(code) {
 
 // Build UMD wrapper
 const umdBundle = `/**
- * BaZi Calculator Core v3.4.0
+ * BaZi Calculator Core v3.5.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
- * NEW in v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
+ * NEW in v3.5.0: 12 Officers (建除十二神) & 28 Mansions (二十八宿) - Date selection systems
+ * v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
  * v3.3.0: Use God (用神) calculation - the most important BaZi analysis
  */
 (function (global, factory) {
@@ -150,6 +153,16 @@ const umdBundle = `/**
     ${stripCommonJS(qiMen)}
 
     // ============================================
+    // TIMING SYSTEMS DATA
+    // ============================================
+    ${stripCommonJS(timingData)}
+
+    // ============================================
+    // TIMING SYSTEMS
+    // ============================================
+    ${stripCommonJS(timing)}
+
+    // ============================================
     // MAIN CALCULATOR
     // ============================================
     ${stripCommonJS(index)}
@@ -244,8 +257,16 @@ const umdBundle = `/**
         calculateDestinyDoor: calculateDestinyDoor,
         EIGHT_DOORS: EIGHT_DOORS,
 
+        // Timing Systems (v3.5.0)
+        getTodayOfficer: getTodayOfficer,
+        getTodayMansion: getTodayMansion,
+        getHourRating: getHourRating,
+        getHourDirection: getHourDirection,
+        TWELVE_OFFICERS: TWELVE_OFFICERS,
+        TWENTY_EIGHT_MANSIONS: TWENTY_EIGHT_MANSIONS,
+
         // Version
-        version: '3.4.0'
+        version: '3.5.0'
     };
 });
 `;
