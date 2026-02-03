@@ -1,10 +1,11 @@
 /**
- * BaZi Calculator Core v3.3.0
+ * BaZi Calculator Core v3.4.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
- * NEW in v3.3.0: Use God (用神) calculation - the most important BaZi analysis
+ * NEW in v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
+ * v3.3.0: Use God (用神) calculation - the most important BaZi analysis
  */
 (function (global, factory) {
     if (typeof module === 'object' && typeof module.exports === 'object') {
@@ -739,6 +740,417 @@ function selectUseGod(chart) {
 }
 
     // ============================================
+    // LUCK PILLARS
+    // ============================================
+    /**
+ * Luck Pillars Module
+ * Calculate 10-year Luck Cycles (大运 Da Yun) based on BaZi chart
+ * SSOT for Luck Pillars calculation
+ */
+
+
+
+
+
+/**
+ * Calculate Luck Pillars (大运 Da Yun) - 10-year cycles
+ * @param {Object} chart - BaZi chart with year, month, day pillars and gender
+ * @param {string} chart.gender - 'male' or 'female'
+ * @param {Object} chart.year - Year pillar with stem property
+ * @param {Object} chart.year.stem - Year stem with polarity property
+ * @param {Object} chart.month - Month pillar with stem and branch properties
+ * @param {Object} chart.month.stem - Month stem with chinese property
+ * @param {Object} chart.month.branch - Month branch with chinese property
+ * @param {Object} chart.day - Day pillar with stem property (Day Master)
+ * @param {Object} chart.day.stem - Day Master stem
+ * @param {number} [startAge=2] - Starting age for first luck pillar (default 2)
+ * @returns {Object} Luck pillars data with pillars array, direction, and start age
+ */
+function calculateLuckPillars(chart, startAge = 2) {
+  const gender = chart.gender;
+  const yearStem = chart.year.stem;
+  const monthStem = chart.month.stem;
+  const monthBranch = chart.month.branch;
+  const dayMaster = chart.day.stem;
+
+  // Determine direction based on gender and year stem polarity
+  // Yang year + Male OR Yin year + Female = Forward (順)
+  // Yang year + Female OR Yin year + Male = Backward (逆)
+  const isYangYear = yearStem.polarity === 'yang';
+  const isMale = gender === 'male';
+  const isForward = (isYangYear && isMale) || (!isYangYear && !isMale);
+
+  // Generate 9 luck pillars (covering ages 2-92 by default)
+  const pillars = [];
+  let stemIdx = HEAVENLY_STEMS.findIndex(s => s.chinese === monthStem.chinese);
+  let branchIdx = EARTHLY_BRANCHES.findIndex(b => b.chinese === monthBranch.chinese);
+
+  for (let i = 0; i < 9; i++) {
+    // Move forward or backward
+    if (isForward) {
+      stemIdx = (stemIdx + 1) % 10;
+      branchIdx = (branchIdx + 1) % 12;
+    } else {
+      stemIdx = (stemIdx - 1 + 10) % 10;
+      branchIdx = (branchIdx - 1 + 12) % 12;
+    }
+
+    const stem = HEAVENLY_STEMS[stemIdx];
+    const branch = EARTHLY_BRANCHES[branchIdx];
+    const age = startAge + (i * 10);
+
+    pillars.push({
+      startAge: age,
+      endAge: age + 9,
+      stem: stem,
+      branch: branch,
+      tenGod: getTenGod(dayMaster, stem),
+      nayin: getNaYin(stem, branch)
+    });
+  }
+
+  return { pillars, isForward, startAge };
+}
+
+    // ============================================
+    // VOID STARS
+    // ============================================
+    /**
+ * Void Stars / Empty Death (空亡)
+ * 
+ * Two branches in the chart that are "void" based on the Day Pillar.
+ * These represent areas of life with reduced effectiveness.
+ */
+
+/**
+ * Calculate Void Stars based on Day Stem and Day Branch
+ * @param {number} dayStem - Day stem index (0-9)
+ * @param {number} dayBranch - Day branch index (0-11)
+ * @returns {Array<number>} Array of two void branch indices
+ */
+function getVoidStars(dayStem, dayBranch) {
+  // Calculate 60 Jia Zi index
+  const jiaZiIndex = (dayStem * 12 + dayBranch) % 60;
+  
+  // Each 10-day cycle has 2 void branches
+  // The cycle starts at: floor(jiaZiIndex / 10) * 10
+  // Void branches are at positions 10 and 11 of each cycle
+  const cycleStart = Math.floor(jiaZiIndex / 10) * 10;
+  
+  // The two void branches for this cycle
+  const voidBranches = [
+    (cycleStart + 10) % 12,
+    (cycleStart + 11) % 12
+  ];
+  
+  return voidBranches;
+}
+
+/**
+ * Check if a specific branch is void for the given day pillar
+ * @param {number} dayStem - Day stem index
+ * @param {number} dayBranch - Day branch index
+ * @param {number} checkBranch - Branch to check
+ * @returns {boolean} True if the branch is void
+ */
+function isVoidBranch(dayStem, dayBranch, checkBranch) {
+  const voidBranches = getVoidStars(dayStem, dayBranch);
+  return voidBranches.includes(checkBranch);
+}
+
+/**
+ * Get void stars for all pillars in a chart
+ * @param {Object} chart - Full BaZi chart
+ * @returns {Object} Void star analysis for each pillar
+ */
+function analyzeVoidStarsInChart(chart) {
+  const dayStem = chart.day.stem.index;
+  const dayBranch = chart.day.branch.index;
+  const voidBranches = getVoidStars(dayStem, dayBranch);
+  
+  return {
+    voidBranches: voidBranches,
+    year: { 
+      isVoid: isVoidBranch(dayStem, dayBranch, chart.year.branch.index),
+      impact: 'Ancestral support, early life, social image'
+    },
+    month: { 
+      isVoid: isVoidBranch(dayStem, dayBranch, chart.month.branch.index),
+      impact: 'Career, parents, authority figures'
+    },
+    day: { 
+      isVoid: false, // Day pillar itself is never void
+      impact: 'Self, marriage, spouse'
+    },
+    hour: { 
+      isVoid: isVoidBranch(dayStem, dayBranch, chart.hour.branch.index),
+      impact: 'Children, legacy, creativity, later life'
+    }
+  };
+}
+
+    // ============================================
+    // SYMBOLIC STARS
+    // ============================================
+    /**
+ * Symbolic Stars (Shen Sha 神煞)
+ * Special stars that reveal hidden influences in the chart
+ * Based on pillar combinations and relationships
+ */
+
+
+
+/**
+ * Nobleman (Tian Yi 天乙貴人) lookup
+ * Maps day stem to two noble branches
+ * Based on traditional BaZi theory
+ */
+const NOBLEMAN = {
+  '甲': ['丑', '未'],  // Jia: Ox, Goat
+  '乙': ['子', '申'],  // Yi: Rat, Monkey
+  '丙': ['亥', '酉'],  // Bing: Pig, Rooster
+  '丁': ['亥', '酉'],  // Ding: Pig, Rooster
+  '戊': ['丑', '未'],  // Wu: Ox, Goat
+  '己': ['子', '申'],  // Ji: Rat, Monkey
+  '庚': ['丑', '未'],  // Geng: Ox, Goat
+  '辛': ['午', '寅'],  // Xin: Horse, Tiger
+  '壬': ['卯', '巳'],  // Ren: Rabbit, Snake
+  '癸': ['卯', '巳']   // Gui: Rabbit, Snake
+};
+
+/**
+ * Peach Blossom (Tao Hua 桃花) lookup
+ * Maps day branch to peach blossom branch
+ * Indicates romantic attraction and social charm
+ */
+const PEACH_BLOSSOM = {
+  '寅': '卯',  // Tiger → Rabbit
+  '午': '卯',  // Horse → Rabbit
+  '戌': '卯',  // Dog → Rabbit
+
+  '申': '酉',  // Monkey → Rooster
+  '子': '酉',  // Rat → Rooster
+  '辰': '酉',  // Dragon → Rooster
+
+  '亥': '子',  // Pig → Rat
+  '卯': '子',  // Rabbit → Rat
+  '未': '子',  // Goat → Rat
+
+  '巳': '午',  // Snake → Horse
+  '酉': '午',  // Rooster → Horse
+  '丑': '午'   // Ox → Horse
+};
+
+/**
+ * Sky Horse (Tian Ma 天馬) lookup
+ * Maps day branch to sky horse branch
+ * Indicates travel, movement, and restlessness
+ */
+const SKY_HORSE = {
+  '寅': '申',  // Tiger → Monkey
+  '午': '申',  // Horse → Monkey
+  '戌': '申',  // Dog → Monkey
+
+  '申': '寅',  // Monkey → Tiger
+  '子': '寅',  // Rat → Tiger
+  '辰': '寅',  // Dragon → Tiger
+
+  '亥': '巳',  // Pig → Snake
+  '卯': '巳',  // Rabbit → Snake
+  '未': '巳',  // Goat → Snake
+
+  '巳': '亥',  // Snake → Pig
+  '酉': '亥',  // Rooster → Pig
+  '丑': '亥'   // Ox → Pig
+};
+
+/**
+ * Intelligence Star (Wen Chang 文昌) lookup
+ * Maps day stem to intelligence star branch
+ * Indicates literary talent, education, and wisdom
+ */
+const INTELLIGENCE_STAR = {
+  '甲': '巳',  // Jia → Snake
+  '乙': '午',  // Yi → Horse
+  '丙': '申',  // Bing → Monkey
+  '丁': '酉',  // Ding → Rooster
+  '戊': '申',  // Wu → Monkey
+  '己': '酉',  // Ji → Rooster
+  '庚': '亥',  // Geng → Pig
+  '辛': '子',  // Xin → Rat
+  '壬': '寅',  // Ren → Tiger
+  '癸': '卯'   // Gui → Rabbit
+};
+
+/**
+ * Get Nobleman stars for a day stem
+ * @param {string} dayStem - Day stem (Chinese character)
+ * @returns {Array<string>} Array of two noble branches
+ */
+function getNoblepeople(dayStem) {
+  return NOBLEMAN[dayStem] || [];
+}
+
+/**
+ * Get Peach Blossom for a day branch
+ * @param {string} dayBranch - Day branch (Chinese character)
+ * @returns {string} Peach blossom branch
+ */
+function getPeachBlossom(dayBranch) {
+  return PEACH_BLOSSOM[dayBranch] || '';
+}
+
+/**
+ * Get Sky Horse for a day branch
+ * @param {string} dayBranch - Day branch (Chinese character)
+ * @returns {string} Sky horse branch
+ */
+function getSkyHorse(dayBranch) {
+  return SKY_HORSE[dayBranch] || '';
+}
+
+/**
+ * Get Intelligence Star for a day stem
+ * @param {string} dayStem - Day stem (Chinese character)
+ * @returns {string} Intelligence star branch
+ */
+function getIntelligenceStar(dayStem) {
+  return INTELLIGENCE_STAR[dayStem] || '';
+}
+
+/**
+ * Calculate Life Palace (Ming Gong 命宮)
+ * Life palace branch calculated from month and hour branches
+ * Represents the self and destiny
+ *
+ * Formula: Life Palace = (14 - Month Branch Index - Hour Branch Index) mod 12
+ *
+ * @param {string} monthBranch - Month branch (Chinese character)
+ * @param {string} hourBranch - Hour branch (Chinese character)
+ * @returns {string} Life palace branch
+ */
+function getLifePalace(monthBranch, hourBranch) {
+  // Find indices by matching Chinese characters
+  const monthIdx = EARTHLY_BRANCHES.findIndex(b => b.chinese === monthBranch);
+  const hourIdx = EARTHLY_BRANCHES.findIndex(b => b.chinese === hourBranch);
+
+  if (monthIdx === -1 || hourIdx === -1) {
+    return '';
+  }
+
+  let lifePalaceIdx = (14 - monthIdx - hourIdx) % 12;
+  if (lifePalaceIdx < 0) lifePalaceIdx += 12;
+
+  return EARTHLY_BRANCHES[lifePalaceIdx].chinese;
+}
+
+    // ============================================
+    // FENG SHUI
+    // ============================================
+    /**
+ * Feng Shui Functions
+ * Flying Stars, Ba Zhai (8 Mansions), Annual Afflictions
+ */
+
+
+
+/**
+ * Calculate Kua Number (Life Gua) for Ba Zhai
+ * @param {number} birthYear - Birth year
+ * @param {string} gender - 'male' or 'female'
+ * @returns {number} Kua number (1-9, excluding 5)
+ */
+function calculateKuaNumber(birthYear, gender) {
+  const yearDigits = birthYear.toString().slice(-2);
+  const sum = parseInt(yearDigits[0]) + parseInt(yearDigits[1]);
+  
+  let kua;
+  if (gender === 'male') {
+    kua = 11 - (sum % 10);
+    if (kua === 5) kua = 2; // Male 5 becomes 2
+  } else {
+    kua = 4 + (sum % 10);
+    if (kua > 9) kua -= 9;
+    if (kua === 5) kua = 8; // Female 5 becomes 8
+  }
+  
+  return kua;
+}
+
+/**
+ * Get favorable directions for Kua number
+ * @param {number} kua - Kua number (1-9)
+ * @returns {Object} Favorable and unfavorable directions
+ */
+function getFavorableDirections(kua) {
+  const directions = {
+    1: { favorable: ['N', 'SE', 'E', 'S'], unfavorable: ['W', 'NE', 'NW', 'SW'] },
+    2: { favorable: ['NE', 'W', 'NW', 'SW'], unfavorable: ['N', 'SE', 'E', 'S'] },
+    3: { favorable: ['S', 'N', 'SE', 'E'], unfavorable: ['W', 'NE', 'NW', 'SW'] },
+    4: { favorable: ['N', 'S', 'SE', 'E'], unfavorable: ['W', 'NE', 'NW', 'SW'] },
+    6: { favorable: ['W', 'NE', 'SW', 'NW'], unfavorable: ['N', 'SE', 'E', 'S'] },
+    7: { favorable: ['NW', 'W', 'SW', 'NE'], unfavorable: ['N', 'SE', 'E', 'S'] },
+    8: { favorable: ['SW', 'NW', 'W', 'NE'], unfavorable: ['N', 'SE', 'E', 'S'] },
+    9: { favorable: ['E', 'SE', 'S', 'N'], unfavorable: ['W', 'NE', 'NW', 'SW'] }
+  };
+  
+  return directions[kua] || directions[1];
+}
+
+/**
+ * Calculate Flying Star center number for a given year
+ * @param {number} year - Year to calculate
+ * @returns {number} Center star number (1-9)
+ */
+function calculateFlyingStarCenter(year) {
+  // Period 9: 2024-2043, Period 8: 2004-2023, etc.
+  const baseYear = 2024;
+  const yearsFromBase = year - baseYear;
+  
+  // Flying star cycles: 9,8,7,6,5,4,3,2,1,9,8,7...
+  let center = 9 - (yearsFromBase % 9);
+  if (center <= 0) center += 9;
+  
+  return center;
+}
+
+/**
+ * Get annual afflictions (Tai Sui, Wu Huang, San Sha)
+ * @param {number} year - Year to check
+ * @returns {Object} Affliction directions
+ */
+function getAnnualAfflictions(year) {
+  const yearBranch = (year - 4) % 12;
+  
+  // Tai Sui (Grand Duke) - same direction as year branch
+  const taiSuiDirections = ['N', 'NNE', 'ENE', 'E', 'ESE', 'SSE', 'S', 'SSW', 'WSW', 'W', 'WNW', 'NNW'];
+  const taiSui = taiSuiDirections[yearBranch];
+  
+  // Sui Po (Year Breaker) - opposite of Tai Sui
+  const suiPoIndex = (yearBranch + 6) % 12;
+  const suiPo = taiSuiDirections[suiPoIndex];
+  
+  // San Sha (Three Killings)
+  const sanShaMap = {
+    0: 'S', 4: 'S', 8: 'S',   // Rat, Dragon, Monkey → South
+    2: 'W', 6: 'W', 10: 'W',  // Tiger, Horse, Dog → West
+    3: 'N', 7: 'N', 11: 'N',  // Rabbit, Goat, Pig → North
+    1: 'E', 5: 'E', 9: 'E'    // Ox, Snake, Rooster → East
+  };
+  const sanSha = sanShaMap[yearBranch];
+  
+  // Wu Huang (5 Yellow) - Flying Star center
+  const wuHuang = calculateFlyingStarCenter(year);
+  
+  return {
+    taiSui,
+    suiPo,
+    sanSha,
+    wuHuang: wuHuang === 5 ? 'Center' : null
+  };
+}
+
+    // ============================================
     // SOLAR TERMS
     // ============================================
     /**
@@ -1460,6 +1872,550 @@ function calculateFullChart(year, month, day, hour, minute, gender) {
 }
 
     // ============================================
+    // QI MEN DUN JIA DATA
+    // ============================================
+    /**
+ * Qi Men Dun Jia Data
+ * Based on Joey Yap's Qi Men Dun Jia Destiny Analysis
+ *
+ * Qi Men Structure determination based on Solar Terms
+ * Yang Dun: Winter Solstice to Summer Solstice (structures 1-9)
+ * Yin Dun: Summer Solstice to Winter Solstice (structures 9-1)
+ */
+
+// Solar Terms Data for Qi Men calculations
+// Each year contains all 24 solar terms with their dates
+const SOLAR_TERMS_DATA = {
+  2024: [
+    { name: '小寒', english: 'Minor Cold', date: '01-06' },
+    { name: '大寒', english: 'Major Cold', date: '01-20' },
+    { name: '立春', english: 'Start of Spring', date: '02-04' },
+    { name: '雨水', english: 'Rain Water', date: '02-19' },
+    { name: '驚蟄', english: 'Awakening of Insects', date: '03-05' },
+    { name: '春分', english: 'Spring Equinox', date: '03-20' },
+    { name: '清明', english: 'Clear and Bright', date: '04-04' },
+    { name: '穀雨', english: 'Grain Rain', date: '04-19' },
+    { name: '立夏', english: 'Start of Summer', date: '05-05' },
+    { name: '小滿', english: 'Grain Buds', date: '05-20' },
+    { name: '芒種', english: 'Grain in Ear', date: '06-05' },
+    { name: '夏至', english: 'Summer Solstice', date: '06-21' },
+    { name: '小暑', english: 'Minor Heat', date: '07-06' },
+    { name: '大暑', english: 'Major Heat', date: '07-22' },
+    { name: '立秋', english: 'Start of Autumn', date: '08-07' },
+    { name: '處暑', english: 'End of Heat', date: '08-22' },
+    { name: '白露', english: 'White Dew', date: '09-07' },
+    { name: '秋分', english: 'Autumn Equinox', date: '09-22' },
+    { name: '寒露', english: 'Cold Dew', date: '10-08' },
+    { name: '霜降', english: 'Frost Descent', date: '10-23' },
+    { name: '立冬', english: 'Start of Winter', date: '11-07' },
+    { name: '小雪', english: 'Minor Snow', date: '11-22' },
+    { name: '大雪', english: 'Major Snow', date: '12-06' },
+    { name: '冬至', english: 'Winter Solstice', date: '12-21' }
+  ],
+  2025: [
+    { name: '小寒', english: 'Minor Cold', date: '01-05' },
+    { name: '大寒', english: 'Major Cold', date: '01-20' },
+    { name: '立春', english: 'Start of Spring', date: '02-03' },
+    { name: '雨水', english: 'Rain Water', date: '02-18' },
+    { name: '驚蟄', english: 'Awakening of Insects', date: '03-05' },
+    { name: '春分', english: 'Spring Equinox', date: '03-20' },
+    { name: '清明', english: 'Clear and Bright', date: '04-04' },
+    { name: '穀雨', english: 'Grain Rain', date: '04-20' },
+    { name: '立夏', english: 'Start of Summer', date: '05-05' },
+    { name: '小滿', english: 'Grain Buds', date: '05-21' },
+    { name: '芒種', english: 'Grain in Ear', date: '06-05' },
+    { name: '夏至', english: 'Summer Solstice', date: '06-21' },
+    { name: '小暑', english: 'Minor Heat', date: '07-07' },
+    { name: '大暑', english: 'Major Heat', date: '07-22' },
+    { name: '立秋', english: 'Start of Autumn', date: '08-07' },
+    { name: '處暑', english: 'End of Heat', date: '08-23' },
+    { name: '白露', english: 'White Dew', date: '09-07' },
+    { name: '秋分', english: 'Autumn Equinox', date: '09-23' },
+    { name: '寒露', english: 'Cold Dew', date: '10-08' },
+    { name: '霜降', english: 'Frost Descent', date: '10-23' },
+    { name: '立冬', english: 'Start of Winter', date: '11-07' },
+    { name: '小雪', english: 'Minor Snow', date: '11-22' },
+    { name: '大雪', english: 'Major Snow', date: '12-07' },
+    { name: '冬至', english: 'Winter Solstice', date: '12-21' }
+  ]
+};
+
+// Yang Dun Structure patterns for each Solar Term and Yuan (Upper/Middle/Lower)
+// Winter Solstice to Summer Solstice
+const YANG_DUN_STRUCTURES = {
+  '冬至': [1, 7, 4], '小寒': [2, 8, 5], '大寒': [3, 9, 6],
+  '立春': [8, 5, 2], '雨水': [9, 6, 3], '驚蟄': [1, 7, 4],
+  '春分': [3, 9, 6], '清明': [4, 1, 7], '穀雨': [5, 2, 8],
+  '立夏': [4, 1, 7], '小滿': [5, 2, 8], '芒種': [6, 3, 9]
+};
+
+// Yin Dun Structure patterns for each Solar Term and Yuan (Upper/Middle/Lower)
+// Summer Solstice to Winter Solstice
+const YIN_DUN_STRUCTURES = {
+  '夏至': [9, 3, 6], '小暑': [8, 2, 5], '大暑': [7, 1, 4],
+  '立秋': [2, 5, 8], '處暑': [1, 4, 7], '白露': [9, 3, 6],
+  '秋分': [7, 1, 4], '寒露': [6, 9, 3], '霜降': [5, 8, 2],
+  '立冬': [6, 9, 3], '小雪': [5, 8, 2], '大雪': [4, 7, 1]
+};
+
+// Destiny Door Lookup Tables based on Structure + Life Stem Pair + Hour
+// Life Stem pairs: 甲己(0), 乙庚(1), 丙辛(2), 丁壬(3), 戊癸(4)
+// Hour index: 子(0) to 亥(11)
+// Door values: 休生傷杜景死驚開
+const DESTINY_DOOR_TABLES = {
+  // Yang 1 Structure - from Joey Yap reference page 24
+  'Y1': {
+    // [甲己, 乙庚, 丙辛, 丁壬, 戊癸] for each hour
+    0:  ['休', '傷', '死', '死', '休'], // 子 hour
+    1:  ['開', '生', '景', '景', '杜'], // 丑 hour
+    2:  ['開', '生', '景', '景', '杜'], // 寅 hour
+    3:  ['杜', '死', '休', '休', '生'], // 卯 hour
+    4:  ['杜', '死', '休', '休', '杜'], // 辰 hour
+    5:  ['驚', '休', '杜', '杜', '生'], // 巳 hour
+    6:  ['景', '驚', '生', '生', '開'], // 午 hour
+    7:  ['傷', '景', '開', '開', '景'], // 未 hour
+    8:  ['生', '杜', '驚', '驚', '傷'], // 申 hour
+    9:  ['開', '生', '景', '景', '杜'], // 酉 hour
+    10: ['休', '傷', '死', '死', '驚'], // 戌 hour
+    11: ['傷', '景', '開', '開', '生']  // 亥 hour
+  },
+  // Yang 2 Structure
+  'Y2': {
+    0:  ['傷', '死', '休', '休', '杜'],
+    1:  ['生', '驚', '杜', '杜', '景'],
+    2:  ['生', '驚', '杜', '杜', '景'],
+    3:  ['死', '休', '傷', '傷', '開'],
+    4:  ['死', '休', '傷', '傷', '驚'],
+    5:  ['休', '杜', '驚', '驚', '開'],
+    6:  ['驚', '生', '景', '景', '死'],
+    7:  ['景', '開', '生', '生', '休'],
+    8:  ['杜', '傷', '開', '開', '景'],
+    9:  ['生', '驚', '杜', '杜', '傷'],
+    10: ['傷', '死', '休', '休', '開'],
+    11: ['景', '開', '生', '生', '開']
+  },
+  // Yang 3 Structure
+  'Y3': {
+    0:  ['死', '休', '傷', '傷', '驚'],
+    1:  ['驚', '杜', '死', '死', '休'],
+    2:  ['驚', '杜', '死', '死', '休'],
+    3:  ['休', '傷', '死', '死', '生'],
+    4:  ['休', '傷', '死', '死', '杜'],
+    5:  ['杜', '驚', '休', '休', '生'],
+    6:  ['生', '景', '杜', '杜', '傷'],
+    7:  ['開', '生', '驚', '驚', '杜'],
+    8:  ['傷', '開', '景', '景', '休'],
+    9:  ['驚', '杜', '死', '死', '開'],
+    10: ['死', '休', '傷', '傷', '生'],
+    11: ['開', '生', '驚', '驚', '生']
+  },
+  // Yang 4 Structure
+  'Y4': {
+    0:  ['休', '傷', '死', '死', '開'],
+    1:  ['杜', '死', '休', '休', '杜'],
+    2:  ['杜', '死', '休', '休', '杜'],
+    3:  ['傷', '死', '休', '休', '景'],
+    4:  ['傷', '驚', '杜', '杜', '死'],
+    5:  ['驚', '休', '傷', '傷', '景'],
+    6:  ['景', '杜', '驚', '驚', '開'],
+    7:  ['生', '驚', '生', '生', '死'],
+    8:  ['開', '生', '開', '開', '杜'],
+    9:  ['杜', '死', '休', '休', '生'],
+    10: ['休', '傷', '死', '死', '景'],
+    11: ['生', '驚', '生', '生', '驚']
+  },
+  // Yang 5 Structure
+  'Y5': {
+    0:  ['死', '驚', '景', '開', '死'],
+    1:  ['生', '傷', '休', '杜', '開'],
+    2:  ['生', '傷', '休', '杜', '杜'],
+    3:  ['生', '傷', '休', '死', '死'],
+    4:  ['驚', '開', '死', '開', '驚'],
+    5:  ['景', '死', '杜', '生', '景'],
+    6:  ['驚', '開', '死', '傷', '傷'],
+    7:  ['景', '死', '杜', '景', '生'],
+    8:  ['驚', '開', '死', '杜', '景'],
+    9:  ['休', '生', '景', '死', '傷'],
+    10: ['死', '驚', '景', '生', '死'],
+    11: ['傷', '杜', '生', '休', '驚']
+  },
+  // Yang 6 Structure
+  'Y6': {
+    0:  ['開', '生', '景', '驚', '休'],
+    1:  ['杜', '休', '死', '傷', '景'],
+    2:  ['杜', '休', '死', '傷', '景'],
+    3:  ['杜', '休', '死', '傷', '開'],
+    4:  ['開', '死', '休', '驚', '死'],
+    5:  ['死', '杜', '驚', '景', '休'],
+    6:  ['開', '死', '休', '開', '開'],
+    7:  ['死', '杜', '驚', '死', '杜'],
+    8:  ['開', '死', '休', '生', '死'],
+    9:  ['傷', '驚', '杜', '休', '休'],
+    10: ['開', '生', '景', '景', '杜'],
+    11: ['休', '傷', '生', '杜', '傷']
+  },
+  // Yang 7 Structure
+  'Y7': {
+    0:  ['生', '景', '驚', '開', '杜'],
+    1:  ['休', '死', '傷', '杜', '休'],
+    2:  ['休', '死', '傷', '杜', '休'],
+    3:  ['休', '死', '傷', '杜', '景'],
+    4:  ['死', '休', '驚', '死', '杜'],
+    5:  ['杜', '驚', '景', '生', '杜'],
+    6:  ['死', '休', '開', '傷', '景'],
+    7:  ['杜', '驚', '死', '景', '死'],
+    8:  ['死', '休', '生', '休', '杜'],
+    9:  ['驚', '杜', '休', '開', '傷'],
+    10: ['生', '景', '景', '驚', '死'],
+    11: ['傷', '生', '杜', '死', '休']
+  },
+  // Yang 8 Structure
+  'Y8': {
+    0:  ['景', '驚', '開', '生', '死'],
+    1:  ['死', '傷', '杜', '休', '杜'],
+    2:  ['死', '傷', '杜', '休', '杜'],
+    3:  ['死', '傷', '杜', '休', '休'],
+    4:  ['休', '驚', '死', '杜', '死'],
+    5:  ['驚', '景', '生', '死', '死'],
+    6:  ['休', '開', '傷', '驚', '休'],
+    7:  ['驚', '死', '景', '生', '杜'],
+    8:  ['休', '生', '休', '開', '死'],
+    9:  ['杜', '休', '開', '傷', '休'],
+    10: ['景', '景', '驚', '生', '杜'],
+    11: ['生', '杜', '死', '休', '杜']
+  },
+  // Yang 9 Structure
+  'Y9': {
+    0:  ['驚', '開', '生', '景', '杜'],
+    1:  ['傷', '杜', '休', '死', '死'],
+    2:  ['傷', '杜', '休', '死', '死'],
+    3:  ['傷', '杜', '休', '死', '杜'],
+    4:  ['驚', '死', '杜', '休', '杜'],
+    5:  ['景', '生', '死', '杜', '死'],
+    6:  ['開', '傷', '驚', '休', '杜'],
+    7:  ['死', '景', '生', '驚', '死'],
+    8:  ['生', '休', '開', '傷', '杜'],
+    9:  ['休', '開', '傷', '驚', '杜'],
+    10: ['景', '驚', '生', '景', '死'],
+    11: ['杜', '死', '休', '開', '死']
+  },
+  // Yin 1 Structure
+  'N1': {
+    0:  ['開', '傷', '休', '休', '杜'],
+    1:  ['休', '生', '景', '景', '生'],
+    2:  ['休', '生', '景', '景', '生'],
+    3:  ['驚', '死', '開', '開', '死'],
+    4:  ['驚', '死', '開', '開', '傷'],
+    5:  ['傷', '杜', '生', '生', '死'],
+    6:  ['杜', '驚', '死', '死', '休'],
+    7:  ['死', '景', '休', '休', '景'],
+    8:  ['景', '開', '杜', '杜', '開'],
+    9:  ['休', '生', '景', '景', '死'],
+    10: ['開', '傷', '休', '休', '杜'],
+    11: ['死', '景', '休', '休', '開']
+  },
+  // Yin 2 Structure
+  'N2': {
+    0:  ['傷', '休', '杜', '杜', '生'],
+    1:  ['生', '景', '驚', '驚', '開'],
+    2:  ['生', '景', '驚', '驚', '開'],
+    3:  ['死', '開', '傷', '傷', '杜'],
+    4:  ['死', '開', '傷', '傷', '休'],
+    5:  ['杜', '生', '死', '死', '杜'],
+    6:  ['驚', '死', '休', '休', '景'],
+    7:  ['景', '休', '杜', '杜', '死'],
+    8:  ['開', '杜', '驚', '驚', '生'],
+    9:  ['生', '景', '驚', '驚', '杜'],
+    10: ['傷', '休', '杜', '杜', '生'],
+    11: ['景', '休', '杜', '杜', '生']
+  },
+  // Yin 3 Structure
+  'N3': {
+    0:  ['休', '杜', '驚', '驚', '開'],
+    1:  ['景', '驚', '生', '生', '生'],
+    2:  ['景', '驚', '生', '生', '生'],
+    3:  ['開', '傷', '死', '死', '休'],
+    4:  ['開', '傷', '死', '死', '景'],
+    5:  ['生', '死', '休', '休', '休'],
+    6:  ['死', '休', '杜', '杜', '死'],
+    7:  ['休', '杜', '驚', '驚', '杜'],
+    8:  ['杜', '驚', '景', '景', '傷'],
+    9:  ['景', '驚', '生', '生', '休'],
+    10: ['休', '杜', '驚', '驚', '開'],
+    11: ['休', '杜', '驚', '驚', '傷']
+  },
+  // Yin 4 Structure
+  'N4': {
+    0:  ['杜', '驚', '生', '生', '生'],
+    1:  ['驚', '生', '開', '開', '傷'],
+    2:  ['驚', '生', '開', '開', '傷'],
+    3:  ['傷', '死', '休', '休', '景'],
+    4:  ['傷', '死', '休', '休', '死'],
+    5:  ['死', '休', '杜', '杜', '景'],
+    6:  ['休', '杜', '驚', '驚', '杜'],
+    7:  ['杜', '驚', '生', '生', '休'],
+    8:  ['驚', '景', '死', '死', '開'],
+    9:  ['驚', '生', '開', '開', '景'],
+    10: ['杜', '驚', '生', '生', '生'],
+    11: ['杜', '驚', '生', '生', '開']
+  },
+  // Yin 5 Structure
+  'N5': {
+    0:  ['驚', '生', '開', '開', '傷'],
+    1:  ['生', '開', '傷', '傷', '開'],
+    2:  ['生', '開', '傷', '傷', '開'],
+    3:  ['死', '休', '杜', '杜', '死'],
+    4:  ['死', '休', '杜', '杜', '杜'],
+    5:  ['休', '杜', '驚', '驚', '死'],
+    6:  ['杜', '驚', '生', '生', '休'],
+    7:  ['驚', '生', '開', '開', '景'],
+    8:  ['景', '死', '休', '休', '生'],
+    9:  ['生', '開', '傷', '傷', '死'],
+    10: ['驚', '生', '開', '開', '傷'],
+    11: ['驚', '生', '開', '開', '生']
+  },
+  // Yin 6 Structure
+  'N6': {
+    0:  ['生', '開', '傷', '傷', '開'],
+    1:  ['開', '傷', '死', '死', '生'],
+    2:  ['開', '傷', '死', '死', '生'],
+    3:  ['休', '杜', '驚', '驚', '杜'],
+    4:  ['休', '杜', '驚', '驚', '休'],
+    5:  ['杜', '驚', '生', '生', '杜'],
+    6:  ['驚', '生', '開', '開', '景'],
+    7:  ['生', '開', '傷', '傷', '死'],
+    8:  ['死', '休', '杜', '杜', '傷'],
+    9:  ['開', '傷', '死', '死', '杜'],
+    10: ['生', '開', '傷', '傷', '開'],
+    11: ['生', '開', '傷', '傷', '傷']
+  },
+  // Yin 7 Structure
+  'N7': {
+    0:  ['開', '傷', '死', '死', '生'],
+    1:  ['傷', '死', '休', '休', '傷'],
+    2:  ['傷', '死', '休', '休', '傷'],
+    3:  ['杜', '驚', '生', '生', '休'],
+    4:  ['杜', '驚', '生', '生', '景'],
+    5:  ['驚', '生', '開', '開', '休'],
+    6:  ['生', '開', '傷', '傷', '死'],
+    7:  ['開', '傷', '死', '死', '杜'],
+    8:  ['休', '杜', '驚', '驚', '開'],
+    9:  ['傷', '死', '休', '休', '休'],
+    10: ['開', '傷', '死', '死', '生'],
+    11: ['開', '傷', '死', '死', '開']
+  },
+  // Yin 8 Structure
+  'N8': {
+    0:  ['傷', '死', '休', '休', '傷'],
+    1:  ['死', '休', '杜', '杜', '死'],
+    2:  ['死', '休', '杜', '杜', '死'],
+    3:  ['驚', '生', '開', '開', '景'],
+    4:  ['驚', '生', '開', '開', '死'],
+    5:  ['生', '開', '傷', '傷', '景'],
+    6:  ['開', '傷', '死', '死', '杜'],
+    7:  ['傷', '死', '休', '休', '休'],
+    8:  ['杜', '驚', '生', '生', '生'],
+    9:  ['死', '休', '杜', '杜', '景'],
+    10: ['傷', '死', '休', '休', '傷'],
+    11: ['傷', '死', '休', '休', '生']
+  },
+  // Yin 9 Structure
+  'N9': {
+    0:  ['死', '休', '杜', '杜', '死'],
+    1:  ['休', '杜', '驚', '驚', '休'],
+    2:  ['休', '杜', '驚', '驚', '休'],
+    3:  ['生', '開', '傷', '傷', '死'],
+    4:  ['生', '開', '傷', '傷', '杜'],
+    5:  ['開', '傷', '死', '死', '死'],
+    6:  ['傷', '死', '休', '休', '休'],
+    7:  ['死', '休', '杜', '杜', '景'],
+    8:  ['驚', '生', '開', '開', '傷'],
+    9:  ['休', '杜', '驚', '驚', '死'],
+    10: ['死', '休', '杜', '杜', '死'],
+    11: ['死', '休', '杜', '杜', '傷']
+  }
+};
+
+// Eight Doors meanings
+const EIGHT_DOORS = {
+  '休': { pinyin: 'Xiu', english: 'Rest', rating: 'Auspicious', meaning: 'Rest, recuperation, receiving salary. Good for meetings and negotiations.' },
+  '生': { pinyin: 'Sheng', english: 'Life', rating: 'Excellent', meaning: 'Growth, prosperity, new beginnings. Excellent for starting business.' },
+  '傷': { pinyin: 'Shang', english: 'Harm', rating: 'Inauspicious', meaning: 'Injury, accidents, surgery. Avoid important activities.' },
+  '杜': { pinyin: 'Du', english: 'Delusion', rating: 'Neutral', meaning: 'Hiding, secrecy, defense. Good for avoiding trouble.' },
+  '景': { pinyin: 'Jing', english: 'Scenery', rating: 'Neutral', meaning: 'Beauty, fame, documents. Good for publicity.' },
+  '死': { pinyin: 'Si', english: 'Death', rating: 'Very Inauspicious', meaning: 'Endings, stagnation, burial matters. Avoid all important activities.' },
+  '驚': { pinyin: 'Jing', english: 'Fear', rating: 'Inauspicious', meaning: 'Shock, legal matters, disputes. Be cautious.' },
+  '開': { pinyin: 'Kai', english: 'Open', rating: 'Excellent', meaning: 'Opening, opportunities, success. Excellent for all activities.' }
+};
+
+    // ============================================
+    // QI MEN DUN JIA
+    // ============================================
+    /**
+ * Qi Men Dun Jia (奇門遁甲) Functions
+ * Based on Joey Yap's Qi Men Dun Jia Destiny Analysis
+ *
+ * Qi Men Dun Jia is an ancient Chinese divination technique used to select
+ * auspicious timing and directions for important activities.
+ */
+
+
+
+/**
+ * Helper: Convert SOLAR_TERMS_DATA to array format for a year
+ * @param {number} year - The year to get solar terms for
+ * @returns {Array} Array of solar term objects with date information
+ */
+function getSolarTermsForYear(year) {
+  const data = SOLAR_TERMS_DATA[year] || SOLAR_TERMS_DATA[2025]; // Fallback to 2025
+  return data.map(term => {
+    const [month, day] = term.date.split('-').map(Number);
+    return {
+      name: term.name,
+      english: term.english,
+      year: year,
+      month: month,
+      day: day
+    };
+  });
+}
+
+/**
+ * Get Solar Term for a given date (enhanced version)
+ * Determines which solar term a date falls within and the day number within that term
+ * @param {number} year - Gregorian year
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day
+ * @returns {Object} { term: solar term name, dayInTerm: day number within term }
+ */
+function getSolarTermForDate(year, month, day) {
+  // Find which solar term the date falls in
+  const terms = getSolarTermsForYear(year);
+  let currentTerm = null;
+  let dayInTerm = 0;
+
+  const targetDate = new Date(year, month - 1, day);
+
+  for (let i = 0; i < terms.length; i++) {
+    const termDate = new Date(terms[i].year, terms[i].month - 1, terms[i].day);
+    const nextTermDate = i < terms.length - 1
+      ? new Date(terms[i + 1].year, terms[i + 1].month - 1, terms[i + 1].day)
+      : new Date(year + 1, 0, 6); // Approximate next year's first term
+
+    if (targetDate >= termDate && targetDate < nextTermDate) {
+      currentTerm = terms[i];
+      dayInTerm = Math.floor((targetDate - termDate) / (24 * 60 * 60 * 1000)) + 1;
+      break;
+    }
+  }
+
+  // If not found, check previous year's last term
+  if (!currentTerm) {
+    const prevYearTerms = getSolarTermsForYear(year - 1);
+    const lastTerm = prevYearTerms[prevYearTerms.length - 1];
+    const termDate = new Date(lastTerm.year, lastTerm.month - 1, lastTerm.day);
+    dayInTerm = Math.floor((targetDate - termDate) / (24 * 60 * 60 * 1000)) + 1;
+    currentTerm = lastTerm;
+  }
+
+  return {
+    term: currentTerm ? currentTerm.name : '冬至',
+    dayInTerm: dayInTerm
+  };
+}
+
+/**
+ * Calculate Qi Men Structure Number
+ * Determines which of the 9 Yang Dun or 9 Yin Dun structures applies to a given date
+ * @param {number} year - Gregorian year
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day
+ * @returns {Object} { type: 'Yang' or 'Yin', number: 1-9, key: structure key, term: solar term, yuan: 0-2 }
+ */
+function getQiMenStructure(year, month, day) {
+  // Get Solar Term for the date
+  const solarTermInfo = getSolarTermForDate(year, month, day);
+  const termName = solarTermInfo.term;
+  const dayInTerm = solarTermInfo.dayInTerm;
+
+  // Determine Yuan (Upper=0, Middle=1, Lower=2) based on day within term
+  // Each Yuan is roughly 5 days
+  let yuan;
+  if (dayInTerm <= 5) yuan = 0;      // Upper Yuan (上元)
+  else if (dayInTerm <= 10) yuan = 1; // Middle Yuan (中元)
+  else yuan = 2;                      // Lower Yuan (下元)
+
+  // Determine if Yang Dun or Yin Dun
+  const isYangDun = YANG_DUN_STRUCTURES.hasOwnProperty(termName);
+
+  let structureNum;
+  if (isYangDun) {
+    structureNum = YANG_DUN_STRUCTURES[termName][yuan];
+    return { type: 'Yang', number: structureNum, key: 'Y' + structureNum, term: termName, yuan: yuan };
+  } else {
+    structureNum = YIN_DUN_STRUCTURES[termName][yuan];
+    return { type: 'Yin', number: structureNum, key: 'N' + structureNum, term: termName, yuan: yuan };
+  }
+}
+
+/**
+ * Get Life Stem pair index (for lookup table)
+ * Maps the 10 Heavenly Stems into 5 pairs
+ * @param {string} stemChinese - Chinese character for the stem (甲-癸)
+ * @returns {number} Pair index 0-4: 甲己(0), 乙庚(1), 丙辛(2), 丁壬(3), 戊癸(4)
+ */
+function getLifeStemPairIndex(stemChinese) {
+  const pairs = {
+    '甲': 0, '己': 0,
+    '乙': 1, '庚': 1,
+    '丙': 2, '辛': 2,
+    '丁': 3, '壬': 3,
+    '戊': 4, '癸': 4
+  };
+  return pairs[stemChinese] !== undefined ? pairs[stemChinese] : 0;
+}
+
+/**
+ * Calculate Destiny Door using proper Qi Men method
+ * The Destiny Door indicates the fortune/energy for a specific hour on a given day
+ * @param {number} year - Gregorian year
+ * @param {number} month - Month (1-12)
+ * @param {number} day - Day
+ * @param {number} hour - Hour (0-23)
+ * @param {string} dayStemChinese - Chinese character for day stem (甲-癸)
+ * @returns {Object} { door: Chinese door character, structure: Qi Men structure info, doorInfo: door meaning }
+ */
+function calculateDestinyDoor(year, month, day, hour, dayStemChinese) {
+  // 1. Get the Qi Men Structure
+  const structure = getQiMenStructure(year, month, day);
+
+  // 2. Get Life Stem pair index
+  const stemPairIndex = getLifeStemPairIndex(dayStemChinese);
+
+  // 3. Get Hour Branch index (0-11)
+  const hourBranchIndex = Math.floor(((hour + 1) % 24) / 2);
+
+  // 4. Look up Destiny Door from table
+  const lookupTable = DESTINY_DOOR_TABLES[structure.key];
+  if (!lookupTable) {
+    console.error('Qi Men lookup table not found for structure:', structure.key);
+    return {
+      door: '休',
+      structure: structure,
+      doorInfo: EIGHT_DOORS['休']
+    }; // Default fallback
+  }
+
+  const doorChinese = lookupTable[hourBranchIndex][stemPairIndex];
+
+  return {
+    door: doorChinese,
+    structure: structure,
+    doorInfo: EIGHT_DOORS[doorChinese] || {}
+  };
+}
+
+    // ============================================
     // MAIN CALCULATOR
     // ============================================
     /**
@@ -1467,6 +2423,7 @@ function calculateFullChart(year, month, day, hour, minute, gender) {
  * Pure calculation engine for Four Pillars
  * SSOT for all BaZi calculations
  */
+
 
 
 
@@ -1628,13 +2585,45 @@ function calculateBaZi(birth) {
         getLifeGua: getLifeGua,
         getFavorableDirections: getFavorableDirections,
 
-        // Use God Functions
+        // Luck Pillars
+        calculateLuckPillars: calculateLuckPillars,
+
+        // Use God Functions (v3.3.0)
         selectUseGod: selectUseGod,
         calculateDayMasterStrength: calculateDayMasterStrength,
         getSeasonalStrength: getSeasonalStrength,
         analyzeImbalances: analyzeImbalances,
+        HIDDEN_STEMS: HIDDEN_STEMS,
+        getHiddenStems: getHiddenStems,
+        getHiddenStemsForChart: getHiddenStemsForChart,
+
+        // Void Stars (v3.3.0)
+        getVoidStars: getVoidStars,
+        isVoidBranch: isVoidBranch,
+        analyzeVoidStarsInChart: analyzeVoidStarsInChart,
+
+        // Symbolic Stars (v3.3.0)
+        getNoblepeople: getNoblepeople,
+        getPeachBlossom: getPeachBlossom,
+        getSkyHorse: getSkyHorse,
+        getIntelligenceStar: getIntelligenceStar,
+        getLifePalace: getLifePalace,
+
+        // Feng Shui (v3.3.0)
+        calculateKuaNumber: calculateKuaNumber,
+        getFavorableDirections: getFavorableDirections,
+        calculateFlyingStarCenter: calculateFlyingStarCenter,
+        getAnnualAfflictions: getAnnualAfflictions,
+
+        // Qi Men Dun Jia (v3.4.0)
+        getSolarTermsForYear: getSolarTermsForYear,
+        getSolarTermForDate: getSolarTermForDate,
+        getQiMenStructure: getQiMenStructure,
+        getLifeStemPairIndex: getLifeStemPairIndex,
+        calculateDestinyDoor: calculateDestinyDoor,
+        EIGHT_DOORS: EIGHT_DOORS,
 
         // Version
-        version: '3.2.0'
+        version: '3.4.0'
     };
 });

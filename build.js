@@ -13,12 +13,18 @@ const tenGods = fs.readFileSync(path.join(__dirname, 'src/tenGods.js'), 'utf8');
 const branchRelations = fs.readFileSync(path.join(__dirname, 'src/branchRelations.js'), 'utf8');
 const nayin = fs.readFileSync(path.join(__dirname, 'src/nayin.js'), 'utf8');
 const useGod = fs.readFileSync(path.join(__dirname, 'src/useGod.js'), 'utf8');
+const luckPillars = fs.readFileSync(path.join(__dirname, 'src/luckPillars.js'), 'utf8');
+const voidStars = fs.readFileSync(path.join(__dirname, 'src/voidStars.js'), 'utf8');
+const symbolicStars = fs.readFileSync(path.join(__dirname, 'src/symbolicStars.js'), 'utf8');
+const fengShui = fs.readFileSync(path.join(__dirname, 'src/fengShui.js'), 'utf8');
 const dayPillar = fs.readFileSync(path.join(__dirname, 'src/dayPillar.js'), 'utf8');
 const yearPillar = fs.readFileSync(path.join(__dirname, 'src/yearPillar.js'), 'utf8');
 const monthPillar = fs.readFileSync(path.join(__dirname, 'src/monthPillar.js'), 'utf8');
 const hourPillar = fs.readFileSync(path.join(__dirname, 'src/hourPillar.js'), 'utf8');
 const formatters = fs.readFileSync(path.join(__dirname, 'src/formatters.js'), 'utf8');
 const chartAnalysis = fs.readFileSync(path.join(__dirname, 'src/chartAnalysis.js'), 'utf8');
+const qiMenData = fs.readFileSync(path.join(__dirname, 'src/data/qiMenData.js'), 'utf8');
+const qiMen = fs.readFileSync(path.join(__dirname, 'src/qiMen.js'), 'utf8');
 const index = fs.readFileSync(path.join(__dirname, 'src/index.js'), 'utf8');
 
 // Strip module.exports and require statements
@@ -31,12 +37,13 @@ function stripCommonJS(code) {
 
 // Build UMD wrapper
 const umdBundle = `/**
- * BaZi Calculator Core v3.3.0
+ * BaZi Calculator Core v3.4.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
- * NEW in v3.3.0: Use God (用神) calculation - the most important BaZi analysis
+ * NEW in v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
+ * v3.3.0: Use God (用神) calculation - the most important BaZi analysis
  */
 (function (global, factory) {
     if (typeof module === 'object' && typeof module.exports === 'object') {
@@ -78,6 +85,26 @@ const umdBundle = `/**
     ${stripCommonJS(useGod)}
 
     // ============================================
+    // LUCK PILLARS
+    // ============================================
+    ${stripCommonJS(luckPillars)}
+
+    // ============================================
+    // VOID STARS
+    // ============================================
+    ${stripCommonJS(voidStars)}
+
+    // ============================================
+    // SYMBOLIC STARS
+    // ============================================
+    ${stripCommonJS(symbolicStars)}
+
+    // ============================================
+    // FENG SHUI
+    // ============================================
+    ${stripCommonJS(fengShui)}
+
+    // ============================================
     // SOLAR TERMS
     // ============================================
     ${stripCommonJS(solarTerms)}
@@ -111,6 +138,16 @@ const umdBundle = `/**
     // CHART ANALYSIS
     // ============================================
     ${stripCommonJS(chartAnalysis)}
+
+    // ============================================
+    // QI MEN DUN JIA DATA
+    // ============================================
+    ${stripCommonJS(qiMenData)}
+
+    // ============================================
+    // QI MEN DUN JIA
+    // ============================================
+    ${stripCommonJS(qiMen)}
 
     // ============================================
     // MAIN CALCULATOR
@@ -169,14 +206,46 @@ const umdBundle = `/**
         getLifeGua: getLifeGua,
         getFavorableDirections: getFavorableDirections,
 
-        // Use God Functions
+        // Luck Pillars
+        calculateLuckPillars: calculateLuckPillars,
+
+        // Use God Functions (v3.3.0)
         selectUseGod: selectUseGod,
         calculateDayMasterStrength: calculateDayMasterStrength,
         getSeasonalStrength: getSeasonalStrength,
         analyzeImbalances: analyzeImbalances,
+        HIDDEN_STEMS: HIDDEN_STEMS,
+        getHiddenStems: getHiddenStems,
+        getHiddenStemsForChart: getHiddenStemsForChart,
+
+        // Void Stars (v3.3.0)
+        getVoidStars: getVoidStars,
+        isVoidBranch: isVoidBranch,
+        analyzeVoidStarsInChart: analyzeVoidStarsInChart,
+
+        // Symbolic Stars (v3.3.0)
+        getNoblepeople: getNoblepeople,
+        getPeachBlossom: getPeachBlossom,
+        getSkyHorse: getSkyHorse,
+        getIntelligenceStar: getIntelligenceStar,
+        getLifePalace: getLifePalace,
+
+        // Feng Shui (v3.3.0)
+        calculateKuaNumber: calculateKuaNumber,
+        getFavorableDirections: getFavorableDirections,
+        calculateFlyingStarCenter: calculateFlyingStarCenter,
+        getAnnualAfflictions: getAnnualAfflictions,
+
+        // Qi Men Dun Jia (v3.4.0)
+        getSolarTermsForYear: getSolarTermsForYear,
+        getSolarTermForDate: getSolarTermForDate,
+        getQiMenStructure: getQiMenStructure,
+        getLifeStemPairIndex: getLifeStemPairIndex,
+        calculateDestinyDoor: calculateDestinyDoor,
+        EIGHT_DOORS: EIGHT_DOORS,
 
         // Version
-        version: '3.2.0'
+        version: '3.4.0'
     };
 });
 `;

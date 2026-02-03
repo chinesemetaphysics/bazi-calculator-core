@@ -15,6 +15,7 @@ const { selectUseGod, calculateDayMasterStrength, getSeasonalStrength, analyzeIm
 const { getVoidStars, isVoidBranch, analyzeVoidStarsInChart } = require('./voidStars');
 const { getNoblepeople, getPeachBlossom, getSkyHorse, getIntelligenceStar, getLifePalace } = require('./symbolicStars');
 const { calculateKuaNumber, getFavorableDirections, calculateFlyingStarCenter, getAnnualAfflictions } = require('./fengShui');
+const { getSolarTermsForYear, getSolarTermForDate, getQiMenStructure, getLifeStemPairIndex, calculateDestinyDoor, EIGHT_DOORS } = require('./qiMen');
 
 /**
  * Parse timezone offset string to minutes
@@ -134,5 +135,11 @@ module.exports = {
     calculateKuaNumber,
     getFavorableDirections,
     calculateFlyingStarCenter,
-    getAnnualAfflictions
+    getAnnualAfflictions,
+    getSolarTermsForYear,
+    getSolarTermForDate,
+    getQiMenStructure,
+    getLifeStemPairIndex,
+    calculateDestinyDoor,
+    EIGHT_DOORS
 };
