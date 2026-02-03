@@ -10,6 +10,7 @@ const { calculateDayPillar } = require('./dayPillar');
 const { calculateHourPillar } = require('./hourPillar');
 const { formatPillar, formatChinesePillar } = require('./formatters');
 const { calculateLuckPillars } = require('./luckPillars');
+const { HIDDEN_STEMS, getHiddenStems, getHiddenStemsForChart } = require('./constants');
 
 /**
  * Parse timezone offset string to minutes
@@ -109,5 +110,8 @@ function calculateBaZi(birth) {
 
 module.exports = {
     calculateBaZi,
-    calculateLuckPillars
+    calculateLuckPillars,
+    HIDDEN_STEMS,
+    getHiddenStems,
+    getHiddenStemsForChart
 };
