@@ -14,6 +14,7 @@ const { HIDDEN_STEMS, getHiddenStems, getHiddenStemsForChart } = require('./cons
 const { selectUseGod, calculateDayMasterStrength, getSeasonalStrength, analyzeImbalances, SEASONAL_STRENGTH } = require('./useGod');
 const { getVoidStars, isVoidBranch, analyzeVoidStarsInChart } = require('./voidStars');
 const { getNoblepeople, getPeachBlossom, getSkyHorse, getIntelligenceStar, getLifePalace } = require('./symbolicStars');
+const { calculateKuaNumber, getFavorableDirections, calculateFlyingStarCenter, getAnnualAfflictions } = require('./fengShui');
 
 /**
  * Parse timezone offset string to minutes
@@ -129,5 +130,9 @@ module.exports = {
     getPeachBlossom,
     getSkyHorse,
     getIntelligenceStar,
-    getLifePalace
+    getLifePalace,
+    calculateKuaNumber,
+    getFavorableDirections,
+    calculateFlyingStarCenter,
+    getAnnualAfflictions
 };

@@ -1,10 +1,10 @@
 /**
- * BaZi Calculator Core v3.2.0
+ * BaZi Calculator Core v3.3.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
- * NEW in v3.2.0: Use God (用神) calculation - the most important BaZi analysis
+ * NEW in v3.3.0: Use God (用神) calculation - the most important BaZi analysis
  */
 (function (global, factory) {
     if (typeof module === 'object' && typeof module.exports === 'object') {
@@ -1467,6 +1467,7 @@ function calculateFullChart(year, month, day, hour, minute, gender) {
  * Pure calculation engine for Four Pillars
  * SSOT for all BaZi calculations
  */
+
 
 
 
