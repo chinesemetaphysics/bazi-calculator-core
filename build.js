@@ -12,6 +12,7 @@ const solarTerms = fs.readFileSync(path.join(__dirname, 'src/solarTerms.js'), 'u
 const tenGods = fs.readFileSync(path.join(__dirname, 'src/tenGods.js'), 'utf8');
 const branchRelations = fs.readFileSync(path.join(__dirname, 'src/branchRelations.js'), 'utf8');
 const nayin = fs.readFileSync(path.join(__dirname, 'src/nayin.js'), 'utf8');
+const useGod = fs.readFileSync(path.join(__dirname, 'src/useGod.js'), 'utf8');
 const dayPillar = fs.readFileSync(path.join(__dirname, 'src/dayPillar.js'), 'utf8');
 const yearPillar = fs.readFileSync(path.join(__dirname, 'src/yearPillar.js'), 'utf8');
 const monthPillar = fs.readFileSync(path.join(__dirname, 'src/monthPillar.js'), 'utf8');
@@ -30,11 +31,12 @@ function stripCommonJS(code) {
 
 // Build UMD wrapper
 const umdBundle = `/**
- * BaZi Calculator Core v3.1.0
+ * BaZi Calculator Core v3.2.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
- * 
+ *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
+ * NEW in v3.2.0: Use God (用神) calculation - the most important BaZi analysis
  */
 (function (global, factory) {
     if (typeof module === 'object' && typeof module.exports === 'object') {
@@ -69,6 +71,11 @@ const umdBundle = `/**
     // NA YIN
     // ============================================
     ${stripCommonJS(nayin)}
+
+    // ============================================
+    // USE GOD
+    // ============================================
+    ${stripCommonJS(useGod)}
 
     // ============================================
     // SOLAR TERMS
@@ -150,6 +157,9 @@ const umdBundle = `/**
         // Constants - Na Yin
         NAYIN: NAYIN,
 
+        // Constants - Use God
+        SEASONAL_STRENGTH: SEASONAL_STRENGTH,
+
         // Analysis Functions
         getTenGod: getTenGod,
         getElementRelation: getElementRelation,
@@ -159,8 +169,14 @@ const umdBundle = `/**
         getLifeGua: getLifeGua,
         getFavorableDirections: getFavorableDirections,
 
+        // Use God Functions
+        selectUseGod: selectUseGod,
+        calculateDayMasterStrength: calculateDayMasterStrength,
+        getSeasonalStrength: getSeasonalStrength,
+        analyzeImbalances: analyzeImbalances,
+
         // Version
-        version: '3.1.0'
+        version: '3.2.0'
     };
 });
 `;
