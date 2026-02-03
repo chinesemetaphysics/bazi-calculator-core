@@ -11,6 +11,8 @@ const { calculateHourPillar } = require('./hourPillar');
 const { formatPillar, formatChinesePillar } = require('./formatters');
 const { calculateLuckPillars } = require('./luckPillars');
 const { HIDDEN_STEMS, getHiddenStems, getHiddenStemsForChart } = require('./constants');
+const { selectUseGod, calculateDayMasterStrength, getSeasonalStrength, analyzeImbalances, SEASONAL_STRENGTH } = require('./useGod');
+const { getVoidStars, isVoidBranch, analyzeVoidStarsInChart } = require('./voidStars');
 
 /**
  * Parse timezone offset string to minutes
@@ -113,5 +115,13 @@ module.exports = {
     calculateLuckPillars,
     HIDDEN_STEMS,
     getHiddenStems,
-    getHiddenStemsForChart
+    getHiddenStemsForChart,
+    selectUseGod,
+    calculateDayMasterStrength,
+    getSeasonalStrength,
+    analyzeImbalances,
+    SEASONAL_STRENGTH,
+    getVoidStars,
+    isVoidBranch,
+    analyzeVoidStarsInChart
 };
