@@ -9,6 +9,17 @@ const { calculateMonthPillar } = require('./monthPillar');
 const { calculateDayPillar } = require('./dayPillar');
 const { calculateHourPillar } = require('./hourPillar');
 const { formatPillar, formatChinesePillar } = require('./formatters');
+const { calculateLuckPillars } = require('./luckPillars');
+const { HIDDEN_STEMS, getHiddenStems, getHiddenStemsForChart } = require('./constants');
+const { selectUseGod, calculateDayMasterStrength, getSeasonalStrength, analyzeImbalances, SEASONAL_STRENGTH } = require('./useGod');
+const { getVoidStars, isVoidBranch, analyzeVoidStarsInChart } = require('./voidStars');
+const { getNoblepeople, getPeachBlossom, getSkyHorse, getIntelligenceStar, getLifePalace } = require('./symbolicStars');
+const { calculateKuaNumber, getFavorableDirections, calculateFlyingStarCenter, getAnnualAfflictions } = require('./fengShui');
+const { getSolarTermsForYear, getSolarTermForDate, getQiMenStructure, getLifeStemPairIndex, calculateDestinyDoor, EIGHT_DOORS } = require('./qiMen');
+const { getTodayOfficer, getTodayMansion, getHourRating, getHourDirection, TWELVE_OFFICERS, TWENTY_EIGHT_MANSIONS } = require('./timing');
+const { calculateFullChart, getElementCount, getFavorableElements, getLifeGua } = require('./chartAnalysis');
+const { getTenGod, getElementRelation } = require('./tenGods');
+const { getNaYin } = require('./nayin');
 
 /**
  * Parse timezone offset string to minutes
@@ -64,7 +75,7 @@ function calculateBaZi(birth) {
     // Solar terms (Li Chun, etc.) occur at specific moments, but the
     // day/hour pillars are based on local observation
 
-    // Apply timezone normalization if provided
+    // Apply timezone normalization if provided (v3.6.0 fix)
     // This converts the input time to UTC, which can then be adjusted for local solar time
     let calcTime = { year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute };
     if (birth.timezone) {
@@ -73,7 +84,7 @@ function calculateBaZi(birth) {
 
     const { year, month, day, hour, minute } = calcTime;
 
-    // Calculate all pillars using normalized time with hour-minute precision
+    // Calculate all pillars using normalized time with hour-minute precision (v3.6.0 fix)
     const dayPillar = calculateDayPillar(year, month, day);
     const yearPillar = calculateYearPillar(year, month, day);
     const monthPillar = calculateMonthPillar(year, month, day, yearPillar.stemIndex, hour, minute);
@@ -115,5 +126,68 @@ function calculateBaZi(birth) {
 }
 
 module.exports = {
-    calculateBaZi
+    // Main calculation functions
+    calculateBaZi,
+    calculateFullChart,
+
+    // Luck Pillars
+    calculateLuckPillars,
+
+    // Hidden Stems
+    HIDDEN_STEMS,
+    getHiddenStems,
+    getHiddenStemsForChart,
+
+    // Use God Functions (v3.3.0)
+    selectUseGod,
+    calculateDayMasterStrength,
+    getSeasonalStrength,
+    analyzeImbalances,
+    SEASONAL_STRENGTH,
+
+    // Void Stars (v3.3.0)
+    getVoidStars,
+    isVoidBranch,
+    analyzeVoidStarsInChart,
+
+    // Symbolic Stars (v3.3.0)
+    getNoblepeople,
+    getPeachBlossom,
+    getSkyHorse,
+    getIntelligenceStar,
+    getLifePalace,
+
+    // Feng Shui (v3.3.0)
+    calculateKuaNumber,
+    getFavorableDirections,
+    calculateFlyingStarCenter,
+    getAnnualAfflictions,
+
+    // Qi Men Dun Jia (v3.4.0)
+    getSolarTermsForYear,
+    getSolarTermForDate,
+    getQiMenStructure,
+    getLifeStemPairIndex,
+    calculateDestinyDoor,
+    EIGHT_DOORS,
+
+    // Timing Systems (v3.5.0)
+    getTodayOfficer,
+    getTodayMansion,
+    getHourRating,
+    getHourDirection,
+    TWELVE_OFFICERS,
+    TWENTY_EIGHT_MANSIONS,
+
+    // Chart Analysis
+    getElementCount,
+    getFavorableElements,
+    getLifeGua,
+
+    // Ten Gods & Elements
+    getTenGod,
+    getElementRelation,
+
+    // Na Yin
+    getNaYin
 };
