@@ -1,7 +1,7 @@
 /**
- * BaZi Calculator Core v2.0.0
+ * BaZi Calculator Core v3.6.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
- * 
+ *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
  */
@@ -705,8 +705,9 @@ function calculateBaZi(birth) {
         calculateHourPillar: calculateHourPillar,
         
         // Solar terms
-        getSolarTerms: getSolarTerms,
-        findLiChun: findLiChun,
+        getYearSolarTerms: getYearSolarTerms,
+        getLiChunDate: getLiChunDate,
+        getSolarMonthForDate: getSolarMonthForDate,
         
         // Formatters
         formatPillar: formatPillar,
@@ -717,6 +718,6 @@ function calculateBaZi(birth) {
         EARTHLY_BRANCHES: EARTHLY_BRANCHES,
         
         // Version
-        version: '2.0.0'
+        version: '3.6.0'
     };
 });
