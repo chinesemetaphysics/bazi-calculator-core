@@ -63,12 +63,20 @@ function calculateBaZi(birth) {
     // BaZi uses LOCAL solar time, not UTC
     // Solar terms (Li Chun, etc.) occur at specific moments, but the
     // day/hour pillars are based on local observation
-    const { year, month, day, hour, minute } = birth;
 
-    // Calculate all pillars using local time
+    // Apply timezone normalization if provided
+    // This converts the input time to UTC, which can then be adjusted for local solar time
+    let calcTime = { year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute };
+    if (birth.timezone) {
+        calcTime = normalizeToUTC(birth);
+    }
+
+    const { year, month, day, hour, minute } = calcTime;
+
+    // Calculate all pillars using normalized time with hour-minute precision
     const dayPillar = calculateDayPillar(year, month, day);
     const yearPillar = calculateYearPillar(year, month, day);
-    const monthPillar = calculateMonthPillar(year, month, day, yearPillar.stemIndex);
+    const monthPillar = calculateMonthPillar(year, month, day, yearPillar.stemIndex, hour, minute);
     const hourPillar = calculateHourPillar(hour, minute, dayPillar.stemIndex);
 
     // Format output

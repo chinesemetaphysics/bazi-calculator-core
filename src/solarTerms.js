@@ -47,11 +47,18 @@ function julianDayToGregorian(JD) {
     const D = Math.floor(365.25 * C);
     const E = Math.floor((B - D) / 30.6001);
 
-    const day = B - D - Math.floor(30.6001 * E);
+    const dayWithFraction = B - D - Math.floor(30.6001 * E);
+    const day = Math.floor(dayWithFraction);
     const month = E < 14 ? E - 1 : E - 13;
     const year = month > 2 ? C - 4716 : C - 4715;
 
-    return { year, month, day: Math.floor(day) };
+    // Extract hour and minute from the fractional part of the day
+    const dayFraction = dayWithFraction - day;
+    const totalMinutes = dayFraction * 24 * 60;
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = Math.floor(totalMinutes % 60);
+
+    return { year, month, day, hour, minute };
 }
 
 /**
@@ -241,9 +248,11 @@ function getYearSolarTerms(year) {
  * @param {number} year - Gregorian year
  * @param {number} month - Month (1-12)
  * @param {number} day - Day
+ * @param {number} hour - Hour (0-23), default 0
+ * @param {number} minute - Minute (0-59), default 0
  * @returns {Object} { solarMonthIndex, monthBranch }
  */
-function getSolarMonthForDate(year, month, day) {
+function getSolarMonthForDate(year, month, day, hour = 0, minute = 0) {
     // Get terms for current year and previous year
     const currentYearTerms = getYearSolarTerms(year);
     const prevYearTerms = getYearSolarTerms(year - 1);
@@ -253,18 +262,22 @@ function getSolarMonthForDate(year, month, day) {
         ...prevYearTerms,
         ...currentYearTerms
     ].sort((a, b) => {
-        const jdA = gregorianToJulianDay(a.year, a.month, a.day);
-        const jdB = gregorianToJulianDay(b.year, b.month, b.day);
+        // Include time-of-day in Julian Day calculation for precise comparison
+        const jdA = gregorianToJulianDay(a.year, a.month, a.day) + (a.hour * 60 + a.minute) / 1440;
+        const jdB = gregorianToJulianDay(b.year, b.month, b.day) + (b.hour * 60 + b.minute) / 1440;
         return jdA - jdB;
     });
 
-    // Convert target date to Julian Day
-    const targetJD = gregorianToJulianDay(year, month, day);
+    // Convert target datetime to Julian Day with time precision
+    // 1440 = minutes in a day (24 * 60)
+    const targetJD = gregorianToJulianDay(year, month, day) + (hour * 60 + minute) / 1440;
 
     // Find which term period the date falls into (search backwards)
     for (let i = allTerms.length - 1; i >= 0; i--) {
         const term = allTerms[i];
-        const termJD = gregorianToJulianDay(term.year, term.month, term.day);
+        // Include time-of-day precision for term boundary
+        const termJD = gregorianToJulianDay(term.year, term.month, term.day) +
+                       (term.hour * 60 + term.minute) / 1440;
 
         if (targetJD >= termJD) {
             return {

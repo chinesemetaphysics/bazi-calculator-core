@@ -110,11 +110,18 @@ function julianDayToGregorian(JD) {
     const D = Math.floor(365.25 * C);
     const E = Math.floor((B - D) / 30.6001);
 
-    const day = B - D - Math.floor(30.6001 * E);
+    const dayWithFraction = B - D - Math.floor(30.6001 * E);
+    const day = Math.floor(dayWithFraction);
     const month = E < 14 ? E - 1 : E - 13;
     const year = month > 2 ? C - 4716 : C - 4715;
 
-    return { year, month, day: Math.floor(day) };
+    // Extract hour and minute from the fractional part of the day
+    const dayFraction = dayWithFraction - day;
+    const totalMinutes = dayFraction * 24 * 60;
+    const hour = Math.floor(totalMinutes / 60);
+    const minute = Math.floor(totalMinutes % 60);
+
+    return { year, month, day, hour, minute };
 }
 
 /**
@@ -304,9 +311,11 @@ function getYearSolarTerms(year) {
  * @param {number} year - Gregorian year
  * @param {number} month - Month (1-12)
  * @param {number} day - Day
+ * @param {number} hour - Hour (0-23), default 0
+ * @param {number} minute - Minute (0-59), default 0
  * @returns {Object} { solarMonthIndex, monthBranch }
  */
-function getSolarMonthForDate(year, month, day) {
+function getSolarMonthForDate(year, month, day, hour = 0, minute = 0) {
     // Get terms for current year and previous year
     const currentYearTerms = getYearSolarTerms(year);
     const prevYearTerms = getYearSolarTerms(year - 1);
@@ -316,18 +325,22 @@ function getSolarMonthForDate(year, month, day) {
         ...prevYearTerms,
         ...currentYearTerms
     ].sort((a, b) => {
-        const jdA = gregorianToJulianDay(a.year, a.month, a.day);
-        const jdB = gregorianToJulianDay(b.year, b.month, b.day);
+        // Include time-of-day in Julian Day calculation for precise comparison
+        const jdA = gregorianToJulianDay(a.year, a.month, a.day) + (a.hour * 60 + a.minute) / 1440;
+        const jdB = gregorianToJulianDay(b.year, b.month, b.day) + (b.hour * 60 + b.minute) / 1440;
         return jdA - jdB;
     });
 
-    // Convert target date to Julian Day
-    const targetJD = gregorianToJulianDay(year, month, day);
+    // Convert target datetime to Julian Day with time precision
+    // 1440 = minutes in a day (24 * 60)
+    const targetJD = gregorianToJulianDay(year, month, day) + (hour * 60 + minute) / 1440;
 
     // Find which term period the date falls into (search backwards)
     for (let i = allTerms.length - 1; i >= 0; i--) {
         const term = allTerms[i];
-        const termJD = gregorianToJulianDay(term.year, term.month, term.day);
+        // Include time-of-day precision for term boundary
+        const termJD = gregorianToJulianDay(term.year, term.month, term.day) +
+                       (term.hour * 60 + term.minute) / 1440;
 
         if (targetJD >= termJD) {
             return {
@@ -431,11 +444,13 @@ function calculateYearPillar(year, month, day) {
  * @param {number} month - Month (1-12)
  * @param {number} day - Day
  * @param {number} yearStemIndex - Year pillar stem index (0-9)
+ * @param {number} hour - Hour (0-23), default 0
+ * @param {number} minute - Minute (0-59), default 0
  * @returns {Object} { stemIndex, branchIndex, solarMonthIndex }
  */
-function calculateMonthPillar(year, month, day, yearStemIndex) {
-    // Get solar month from astronomical calculation
-    const solarMonth = getSolarMonthForDate(year, month, day);
+function calculateMonthPillar(year, month, day, yearStemIndex, hour = 0, minute = 0) {
+    // Get solar month from astronomical calculation with time-of-day precision
+    const solarMonth = getSolarMonthForDate(year, month, day, hour, minute);
     const solarMonthIndex = solarMonth.solarMonthIndex;
     const monthBranchIndex = solarMonth.monthBranch;
 
@@ -462,10 +477,25 @@ function calculateMonthPillar(year, month, day, yearStemIndex) {
  */
 
 /**
- * Calculate Hour Pillar
+ * Calculate Hour Pillar from time and day stem.
+ *
+ * IMPORTANT: For late Zi hour (23:00-23:59), the CALLER must pass
+ * the NEXT day's stem as dayStemIndex, not the current day's stem.
+ * This is the traditional rule where the day changes at 23:00.
+ *
+ * Example:
+ *   Birth: 2025-02-03 23:30
+ *   Day pillar for 2025-02-03 → Jia Zi (stem index 0)
+ *   Day pillar for 2025-02-04 → Yi Chou (stem index 1)
+ *   For hour pillar calculation: Pass stem index 1 (next day's stem)
+ *
+ * The function itself treats 23:00-23:59 and 00:00-00:59 uniformly
+ * as Zi hour (branch 0). The distinction between "late Zi" and "early Zi"
+ * must be handled by the caller through the dayStemIndex parameter.
+ *
  * @param {number} hour - Hour (0-23)
  * @param {number} minute - Minute (0-59)
- * @param {number} dayStemIndex - Day pillar stem index (0-9)
+ * @param {number} dayStemIndex - Day pillar stem index (0-9), use NEXT day's stem for 23:00-23:59
  * @returns {Object} { stemIndex, branchIndex }
  */
 function calculateHourPillar(hour, minute, dayStemIndex) {
@@ -610,12 +640,20 @@ function calculateBaZi(birth) {
     // BaZi uses LOCAL solar time, not UTC
     // Solar terms (Li Chun, etc.) occur at specific moments, but the
     // day/hour pillars are based on local observation
-    const { year, month, day, hour, minute } = birth;
 
-    // Calculate all pillars using local time
+    // Apply timezone normalization if provided
+    // This converts the input time to UTC, which can then be adjusted for local solar time
+    let calcTime = { year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute };
+    if (birth.timezone) {
+        calcTime = normalizeToUTC(birth);
+    }
+
+    const { year, month, day, hour, minute } = calcTime;
+
+    // Calculate all pillars using normalized time with hour-minute precision
     const dayPillar = calculateDayPillar(year, month, day);
     const yearPillar = calculateYearPillar(year, month, day);
-    const monthPillar = calculateMonthPillar(year, month, day, yearPillar.stemIndex);
+    const monthPillar = calculateMonthPillar(year, month, day, yearPillar.stemIndex, hour, minute);
     const hourPillar = calculateHourPillar(hour, minute, dayPillar.stemIndex);
 
     // Format output
