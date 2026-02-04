@@ -26,7 +26,7 @@ function stripCommonJS(code) {
 
 // Build UMD wrapper
 const umdBundle = `/**
- * BaZi Calculator Core v3.6.0
+ * BaZi Calculator Core v3.6.1
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
@@ -113,7 +113,7 @@ const umdBundle = `/**
         EARTHLY_BRANCHES: EARTHLY_BRANCHES,
         
         // Version
-        version: '3.6.0'
+        version: '3.6.1'
     };
 });
 `;
@@ -134,7 +134,7 @@ console.log('   - dist/bazi-calculator.umd.js');
 console.log('   - dist/bazi-calculator.js');
 console.log('');
 console.log('Usage in browser:');
-console.log('  <script src="https://cdn.jsdelivr.net/gh/chinesemetaphysics/bazi-calculator-core@v3.6.0/dist/bazi-calculator.js"></script>');
+console.log('  <script src="https://cdn.jsdelivr.net/gh/chinesemetaphysics/bazi-calculator-core@v3.6.1/dist/bazi-calculator.js"></script>');
 console.log('  <script>');
 console.log('    const chart = BaZiCalculator.calculateBaZi({ year: 2000, month: 1, day: 1, hour: 12, minute: 0, timezone: "+08:00" });');
 console.log('  </script>');

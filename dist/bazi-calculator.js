@@ -1,5 +1,5 @@
 /**
- * BaZi Calculator Core v3.6.0
+ * BaZi Calculator Core v3.6.1
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
@@ -718,6 +718,6 @@ function calculateBaZi(birth) {
         EARTHLY_BRANCHES: EARTHLY_BRANCHES,
         
         // Version
-        version: '3.6.0'
+        version: '3.6.1'
     };
 });

@@ -1,6 +1,6 @@
 {
   "name": "bazi-calculator-core",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "description": "Core BaZi (Four Pillars) calculation engine - SSOT for TheArties applications",
   "main": "dist/bazi-calculator.js",
   "module": "dist/bazi-calculator.esm.js",
