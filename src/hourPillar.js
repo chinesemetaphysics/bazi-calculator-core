@@ -5,10 +5,25 @@
  */
 
 /**
- * Calculate Hour Pillar
+ * Calculate Hour Pillar from time and day stem.
+ *
+ * IMPORTANT: For late Zi hour (23:00-23:59), the CALLER must pass
+ * the NEXT day's stem as dayStemIndex, not the current day's stem.
+ * This is the traditional rule where the day changes at 23:00.
+ *
+ * Example:
+ *   Birth: 2025-02-03 23:30
+ *   Day pillar for 2025-02-03 → Jia Zi (stem index 0)
+ *   Day pillar for 2025-02-04 → Yi Chou (stem index 1)
+ *   For hour pillar calculation: Pass stem index 1 (next day's stem)
+ *
+ * The function itself treats 23:00-23:59 and 00:00-00:59 uniformly
+ * as Zi hour (branch 0). The distinction between "late Zi" and "early Zi"
+ * must be handled by the caller through the dayStemIndex parameter.
+ *
  * @param {number} hour - Hour (0-23)
  * @param {number} minute - Minute (0-59)
- * @param {number} dayStemIndex - Day pillar stem index (0-9)
+ * @param {number} dayStemIndex - Day pillar stem index (0-9), use NEXT day's stem for 23:00-23:59
  * @returns {Object} { stemIndex, branchIndex }
  */
 function calculateHourPillar(hour, minute, dayStemIndex) {

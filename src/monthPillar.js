@@ -12,11 +12,13 @@ const { getSolarMonthForDate } = require('./solarTerms');
  * @param {number} month - Month (1-12)
  * @param {number} day - Day
  * @param {number} yearStemIndex - Year pillar stem index (0-9)
+ * @param {number} hour - Hour (0-23), default 0
+ * @param {number} minute - Minute (0-59), default 0
  * @returns {Object} { stemIndex, branchIndex, solarMonthIndex }
  */
-function calculateMonthPillar(year, month, day, yearStemIndex) {
-    // Get solar month from astronomical calculation
-    const solarMonth = getSolarMonthForDate(year, month, day);
+function calculateMonthPillar(year, month, day, yearStemIndex, hour = 0, minute = 0) {
+    // Get solar month from astronomical calculation with time-of-day precision
+    const solarMonth = getSolarMonthForDate(year, month, day, hour, minute);
     const solarMonthIndex = solarMonth.solarMonthIndex;
     const monthBranchIndex = solarMonth.monthBranch;
 
