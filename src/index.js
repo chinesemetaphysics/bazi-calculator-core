@@ -17,6 +17,7 @@ const { getNoblepeople, getPeachBlossom, getSkyHorse, getIntelligenceStar, getLi
 const { calculateKuaNumber, getFavorableDirections, calculateFlyingStarCenter, getAnnualAfflictions } = require('./fengShui');
 const { getSolarTermsForYear, getSolarTermForDate, getQiMenStructure, getLifeStemPairIndex, calculateDestinyDoor, EIGHT_DOORS } = require('./qiMen');
 const { getTodayOfficer, getTodayMansion, getHourRating, getHourDirection, TWELVE_OFFICERS, TWENTY_EIGHT_MANSIONS } = require('./timing');
+const { verifyKuaNumber, calculateKuaSimple, calculateKuaEraAware, calculateKuaLookup } = require('./kuaVerification');
 
 /**
  * Parse timezone offset string to minutes
@@ -148,5 +149,9 @@ module.exports = {
     getHourRating,
     getHourDirection,
     TWELVE_OFFICERS,
-    TWENTY_EIGHT_MANSIONS
+    TWENTY_EIGHT_MANSIONS,
+    verifyKuaNumber,
+    calculateKuaSimple,
+    calculateKuaEraAware,
+    calculateKuaLookup
 };

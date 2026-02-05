@@ -27,6 +27,7 @@ const qiMenData = fs.readFileSync(path.join(__dirname, 'src/data/qiMenData.js'),
 const qiMen = fs.readFileSync(path.join(__dirname, 'src/qiMen.js'), 'utf8');
 const timingData = fs.readFileSync(path.join(__dirname, 'src/data/timingData.js'), 'utf8');
 const timing = fs.readFileSync(path.join(__dirname, 'src/timing.js'), 'utf8');
+const kuaVerification = fs.readFileSync(path.join(__dirname, 'src/kuaVerification.js'), 'utf8');
 const index = fs.readFileSync(path.join(__dirname, 'src/index.js'), 'utf8');
 
 // Strip module.exports and require statements
@@ -39,12 +40,13 @@ function stripCommonJS(code) {
 
 // Build UMD wrapper
 const umdBundle = `/**
- * BaZi Calculator Core v3.5.0
+ * BaZi Calculator Core v3.7.0
  * https://github.com/chinesemetaphysics/bazi-calculator-core
  *
  * Core calculation engine for Four Pillars (BaZi) analysis
  * SSOT for TheArties applications
- * NEW in v3.5.0: 12 Officers (建除十二神) & 28 Mansions (二十八宿) - Date selection systems
+ * NEW in v3.7.0: Kua Number Verification System - Triple-method verification for accuracy
+ * v3.5.0: 12 Officers (建除十二神) & 28 Mansions (二十八宿) - Date selection systems
  * v3.4.0: Qi Men Dun Jia (奇門遁甲) - Destiny Door timing analysis
  * v3.3.0: Use God (用神) calculation - the most important BaZi analysis
  */
@@ -163,6 +165,11 @@ const umdBundle = `/**
     ${stripCommonJS(timing)}
 
     // ============================================
+    // KUA VERIFICATION (v3.7.0)
+    // ============================================
+    ${stripCommonJS(kuaVerification)}
+
+    // ============================================
     // MAIN CALCULATOR
     // ============================================
     ${stripCommonJS(index)}
@@ -249,6 +256,12 @@ const umdBundle = `/**
         calculateFlyingStarCenter: calculateFlyingStarCenter,
         getAnnualAfflictions: getAnnualAfflictions,
 
+        // Kua Verification (v3.7.0)
+        verifyKuaNumber: verifyKuaNumber,
+        calculateKuaSimple: calculateKuaSimple,
+        calculateKuaEraAware: calculateKuaEraAware,
+        calculateKuaLookup: calculateKuaLookup,
+
         // Qi Men Dun Jia (v3.4.0)
         getSolarTermsForYear: getSolarTermsForYear,
         getSolarTermForDate: getSolarTermForDate,
@@ -266,7 +279,7 @@ const umdBundle = `/**
         TWENTY_EIGHT_MANSIONS: TWENTY_EIGHT_MANSIONS,
 
         // Version
-        version: '3.5.0'
+        version: '3.7.0'
     };
 });
 `;
